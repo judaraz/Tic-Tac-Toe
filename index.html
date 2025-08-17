@@ -3,14 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Monetag Reward + Interstitial</title>
+  <title>Monetag Mini App</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- ✅ Monetag Reward SDK -->
+  <!-- ✅ Monetag SDK -->
   <script src='//libtl.com/sdk.js' data-zone='9730040' data-sdk='show_9730040'></script>
-
-  <!-- ✅ Monetag Interstitial SDK -->
-  <script src="//libtl.com/sdk.js" data-zone="9730050" data-sdk="show_9730050"></script>
 
   <style>
     body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; padding:20px; }
@@ -18,51 +15,166 @@
     .task { background:#222; padding:15px; border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
     button { background:#fff; color:#000; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; }
     #points { font-size:18px; margin-top:20px; }
+    .stopBtn { display:none; margin-top:10px; background:#e74c3c; color:#fff; }
   </style>
 </head>
 <body>
   <h1>🎁 Earn Rewards</h1>
 
-  <!-- Reward buttons -->
+  <!-- Manual Reward -->
   <div class="task">
     <span>Watch Reward Ad</span>
-    <button>Claim</button>
+    <button id="rewardBtn">Claim</button>
   </div>
+
+  <!-- Manual Interstitial -->
   <div class="task">
-    <span>Watch Reward Ad</span>
-    <button>Claim</button>
+    <span>Watch Interstitial Ad</span>
+    <button id="interstitialBtn">Claim</button>
   </div>
+
+  <!-- Manual Reward Popup -->
+  <div class="task">
+    <span>Watch Reward Popup</span>
+    <button id="popupBtn">Claim</button>
+  </div>
+
+  <!-- Auto Reward -->
+  <div class="task">
+    <span>Auto Reward Ads</span>
+    <button id="autoRewardBtn">Start</button>
+  </div>
+  <button id="stopAutoRewardBtn" class="stopBtn">⛔ Stop Auto Reward</button>
+
+  <!-- Auto Interstitial -->
+  <div class="task">
+    <span>Auto Interstitial Ads</span>
+    <button id="autoInterstitialBtn">Start</button>
+  </div>
+  <button id="stopAutoInterstitialBtn" class="stopBtn">⛔ Stop Auto Interstitial</button>
+
+  <!-- Auto Popup -->
+  <div class="task">
+    <span>Auto Reward Popup</span>
+    <button id="autoPopupBtn">Start</button>
+  </div>
+  <button id="stopAutoPopupBtn" class="stopBtn">⛔ Stop Auto Popup</button>
 
   <div id="points">Points: 0</div>
 
   <script>
     let points = 0;
+    let autoRewardInterval = null;
+    let autoInterstitialInterval = null;
+    let autoPopupInterval = null;
 
-    // ✅ Reward Ads (popup on button click)
-    document.querySelectorAll("button").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        try {
-          await show_9730040(); // Reward Ad
-          points += 10;
-          document.getElementById("points").innerText = "Points: " + points;
-        } catch (e) {
-          alert("⚠️ Reward Ad not ready.");
-        }
-      });
+    // ✅ Manual Reward
+    document.getElementById("rewardBtn").addEventListener("click", async () => {
+      try {
+        await show_9730040();
+        addPoints(10);
+      } catch (e) {
+        alert("⚠️ Reward Ad not ready.");
+      }
     });
 
-    // ✅ Interstitial Auto Ads every 20s
-    function startAutoAds() {
-      setInterval(async () => {
-        try {
-          await show_9730050(); // Interstitial Ad (auto, no reward)
-        } catch (e) {
-          console.log("Interstitial not ready.");
-        }
-      }, 20000); // 20 seconds
+    // ✅ Manual Interstitial
+    document.getElementById("interstitialBtn").addEventListener("click", async () => {
+      try {
+        await show_9730040({ type: 'inApp', inAppSettings: { frequency: 1, interval: 1, timeout: 1, everyPage: false } });
+        addPoints(10);
+      } catch (e) {
+        alert("⚠️ Interstitial Ad not ready.");
+      }
+    });
+
+    // ✅ Manual Popup
+    document.getElementById("popupBtn").addEventListener("click", async () => {
+      try {
+        await show_9730040('pop');
+        addPoints(10);
+      } catch (e) {
+        alert("⚠️ Popup Ad not ready.");
+      }
+    });
+
+    // ✅ Auto Reward
+    document.getElementById("autoRewardBtn").addEventListener("click", () => {
+      if (autoRewardInterval) return;
+      document.getElementById("stopAutoRewardBtn").style.display = "inline-block";
+
+      runRewardAd();
+      autoRewardInterval = setInterval(runRewardAd, 20000);
+    });
+
+    document.getElementById("stopAutoRewardBtn").addEventListener("click", () => {
+      clearInterval(autoRewardInterval);
+      autoRewardInterval = null;
+      document.getElementById("stopAutoRewardBtn").style.display = "none";
+    });
+
+    // ✅ Auto Interstitial
+    document.getElementById("autoInterstitialBtn").addEventListener("click", () => {
+      if (autoInterstitialInterval) return;
+      document.getElementById("stopAutoInterstitialBtn").style.display = "inline-block";
+
+      runInterstitialAd();
+      autoInterstitialInterval = setInterval(runInterstitialAd, 20000);
+    });
+
+    document.getElementById("stopAutoInterstitialBtn").addEventListener("click", () => {
+      clearInterval(autoInterstitialInterval);
+      autoInterstitialInterval = null;
+      document.getElementById("stopAutoInterstitialBtn").style.display = "none";
+    });
+
+    // ✅ Auto Popup
+    document.getElementById("autoPopupBtn").addEventListener("click", () => {
+      if (autoPopupInterval) return;
+      document.getElementById("stopAutoPopupBtn").style.display = "inline-block";
+
+      runPopupAd();
+      autoPopupInterval = setInterval(runPopupAd, 20000);
+    });
+
+    document.getElementById("stopAutoPopupBtn").addEventListener("click", () => {
+      clearInterval(autoPopupInterval);
+      autoPopupInterval = null;
+      document.getElementById("stopAutoPopupBtn").style.display = "none";
+    });
+
+    // Helpers
+    async function runRewardAd() {
+      try {
+        await show_9730040();
+        addPoints(10);
+      } catch (e) {
+        console.log("⚠️ Auto Reward failed.");
+      }
     }
 
-    startAutoAds();
+    async function runInterstitialAd() {
+      try {
+        await show_9730040({ type: 'inApp', inAppSettings: { frequency: 1, interval: 1, timeout: 1, everyPage: false } });
+        addPoints(10);
+      } catch (e) {
+        console.log("⚠️ Auto Interstitial failed.");
+      }
+    }
+
+    async function runPopupAd() {
+      try {
+        await show_9730040('pop');
+        addPoints(10);
+      } catch (e) {
+        console.log("⚠️ Auto Popup failed.");
+      }
+    }
+
+    function addPoints(val) {
+      points += val;
+      document.getElementById("points").innerText = "Points: " + points;
+    }
   </script>
 </body>
 </html>
