@@ -3,168 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Your App</title>
+  <title>Monetag Reward + Interstitial</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- ✅ Monetag Reward SDK -->
+  <script src='//libtl.com/sdk.js' data-zone='9730040' data-sdk='show_9730040'></script>
+
+  <!-- ✅ Monetag Interstitial SDK -->
+  <script src="//libtl.com/sdk.js" data-zone="9730050" data-sdk="show_9730050"></script>
+
   <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #000;
-      color: #fff;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px;
-      border-bottom: 1px solid #222;
-    }
-    header h1 {
-      font-size: 16px;
-      font-weight: 500;
-      margin: 0;
-    }
-    header span {
-      font-size: 12px;
-      color: #aaa;
-    }
-    section {
-      padding: 15px;
-    }
-    h2 {
-      font-size: 14px;
-      margin: 10px 0;
-      color: #bbb;
-    }
-    .task {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #111;
-      padding: 12px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
-    .task span {
-      font-size: 16px;
-    }
-    .task p {
-      margin: 0;
-      font-size: 13px;
-      color: #aaa;
-    }
-    .task button {
-      background: #fff;
-      color: #000;
-      border: none;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      cursor: pointer;
-    }
-    .daily {
-      background: #5a3aff;
-      padding: 14px;
-      border-radius: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 14px;
-      margin-top: 15px;
-    }
-    .daily span {
-      font-size: 18px;
-    }
-    nav {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      background: #000;
-      display: flex;
-      justify-content: space-around;
-      padding: 8px 0;
-      border-top: 1px solid #222;
-    }
-    nav div {
-      text-align: center;
-      font-size: 12px;
-      color: #aaa;
-    }
+    body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; padding:20px; }
+    h1 { font-size:20px; margin-bottom:20px; }
+    .task { background:#222; padding:15px; border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+    button { background:#fff; color:#000; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; }
+    #points { font-size:18px; margin-top:20px; }
   </style>
 </head>
 <body>
-  <header>
-    <button onclick="window.close()">Close</button>
-    <div>
-      <h1>Your app</h1>
-      <span>mini app</span>
-    </div>
-    <div>⋮</div>
-  </header>
+  <h1>🎁 Earn Rewards</h1>
 
-  <section>
-    <h2>Tasks</h2>
+  <!-- Reward buttons -->
+  <div class="task">
+    <span>Watch Reward Ad</span>
+    <button>Claim</button>
+  </div>
+  <div class="task">
+    <span>Watch Reward Ad</span>
+    <button>Claim</button>
+  </div>
 
-    <div class="task">
-      <div>
-        <span>🤩</span> Watch short ads
-        <p>Rewarded Interstitial</p>
-      </div>
-      <button onclick="showRewardedInterstitial()">Claim</button>
-    </div>
-
-    <div class="task">
-      <div>
-        <span>😎</span> Click to get reward
-        <p>Rewarded Popup</p>
-      </div>
-      <button onclick="showRewardedPopup()">Claim</button>
-    </div>
-
-    <h2>Daily</h2>
-    <div class="daily" onclick="showInAppInterstitial()">
-      <span>👀</span> Watch video
-      <span>⏰</span>
-    </div>
-  </section>
-
-  <nav>
-    <div>🏠<br>Home</div>
-    <div>❤️<br>Leaders</div>
-    <div>🎁<br>All tasks</div>
-    <div>🎮<br>Games</div>
-  </nav>
+  <div id="points">Points: 0</div>
 
   <script>
-    // Rewarded Interstitial
-    function showRewardedInterstitial() {
-      show_9730040().then(() => {
-        alert('You have seen an ad and earned reward!');
-      });
-    }
+    let points = 0;
 
-    // Rewarded Popup
-    function showRewardedPopup() {
-      show_9730040('pop').then(() => {
-        alert('You earned reward from popup!');
-      }).catch(() => {
-        alert('Ad failed to load.');
-      });
-    }
-
-    // In-App Interstitial
-    function showInAppInterstitial() {
-      show_9730040({
-        type: 'inApp',
-        inAppSettings: {
-          frequency: 2,
-          capping: 0.1,
-          interval: 30,
-          timeout: 5,
-          everyPage: false
+    // ✅ Reward Ads (popup on button click)
+    document.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        try {
+          await show_9730040(); // Reward Ad
+          points += 10;
+          document.getElementById("points").innerText = "Points: " + points;
+        } catch (e) {
+          alert("⚠️ Reward Ad not ready.");
         }
       });
+    });
+
+    // ✅ Interstitial Auto Ads every 20s
+    function startAutoAds() {
+      setInterval(async () => {
+        try {
+          await show_9730050(); // Interstitial Ad (auto, no reward)
+        } catch (e) {
+          console.log("Interstitial not ready.");
+        }
+      }, 20000); // 20 seconds
     }
+
+    startAutoAds();
   </script>
 </body>
 </html>
