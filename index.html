@@ -1,180 +1,157 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Monetag Mini App</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Auto Monetag Ads</title>
 
-  <!-- ✅ Monetag SDK -->
-  <script src='//libtl.com/sdk.js' data-zone='9730040' data-sdk='show_9730040'></script>
+  <!-- Monetag SDK -->
+  <script src='//libtl.com/sdk.js' data-zone='9730228' data-sdk='show_9730228'></script>
 
   <style>
-    body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; padding:20px; }
-    h1 { font-size:20px; margin-bottom:20px; }
-    .task { background:#222; padding:15px; border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
-    button { background:#fff; color:#000; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; }
-    #points { font-size:18px; margin-top:20px; }
-    .stopBtn { display:none; margin-top:10px; background:#e74c3c; color:#fff; }
+    body {
+      background-color: #0e0e0e;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: white;
+    }
+    .card {
+      background-color: #1a1a1a;
+      border-radius: 16px;
+      padding: 20px;
+      width: 300px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: bold;
+      color: gold;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 16px;
+    }
+    .stats {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .progress-ring {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: conic-gradient(gold 0%, #333 0%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 15px auto;
+    }
+    .progress-text {
+      background-color: #1a1a1a;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: bold;
+      color: gold;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .btn-gold {
+      background: linear-gradient(to right, #ffd700, #ffb700);
+      color: black;
+    }
+    .btn-dark {
+      background: #333;
+      color: gold;
+    }
   </style>
 </head>
 <body>
-  <h1>🎁 Earn Rewards</h1>
+  <div class="card">
+    <h2>Auto Monetag Ads</h2>
+    <div class="subtitle">Crypto Earning Lab</div>
 
-  <!-- Manual Reward -->
-  <div class="task">
-    <span>Watch Reward Ad</span>
-    <button id="rewardBtn">Claim</button>
+    <div class="stats">
+      Watched Ads: <span id="watchedCount">0</span><br>
+      Earned Points: <span id="earnedPoints">0</span>
+    </div>
+
+    <div class="progress-ring" id="progressRing">
+      <div class="progress-text" id="progressText">0%</div>
+    </div>
+
+    <button class="btn-gold" id="watchBtn">Watch Ad</button>
+    <button class="btn-gold" id="autoOnBtn">Auto Show Ads</button>
+    <button class="btn-gold" id="autoOffBtn">Stop Auto Ads</button>
   </div>
-
-  <!-- Manual Interstitial -->
-  <div class="task">
-    <span>Watch Interstitial Ad</span>
-    <button id="interstitialBtn">Claim</button>
-  </div>
-
-  <!-- Manual Reward Popup -->
-  <div class="task">
-    <span>Watch Reward Popup</span>
-    <button id="popupBtn">Claim</button>
-  </div>
-
-  <!-- Auto Reward -->
-  <div class="task">
-    <span>Auto Reward Ads</span>
-    <button id="autoRewardBtn">Start</button>
-  </div>
-  <button id="stopAutoRewardBtn" class="stopBtn">⛔ Stop Auto Reward</button>
-
-  <!-- Auto Interstitial -->
-  <div class="task">
-    <span>Auto Interstitial Ads</span>
-    <button id="autoInterstitialBtn">Start</button>
-  </div>
-  <button id="stopAutoInterstitialBtn" class="stopBtn">⛔ Stop Auto Interstitial</button>
-
-  <!-- Auto Popup -->
-  <div class="task">
-    <span>Auto Reward Popup</span>
-    <button id="autoPopupBtn">Start</button>
-  </div>
-  <button id="stopAutoPopupBtn" class="stopBtn">⛔ Stop Auto Popup</button>
-
-  <div id="points">Points: 0</div>
 
   <script>
+    let watched = 0;
     let points = 0;
-    let autoRewardInterval = null;
-    let autoInterstitialInterval = null;
-    let autoPopupInterval = null;
+    let autoInterval = null;
 
-    // ✅ Manual Reward
-    document.getElementById("rewardBtn").addEventListener("click", async () => {
-      try {
-        await show_9730040();
-        addPoints(10);
-      } catch (e) {
-        alert("⚠️ Reward Ad not ready.");
-      }
-    });
+    function updateUI() {
+      document.getElementById('watchedCount').textContent = watched;
+      document.getElementById('earnedPoints').textContent = points;
+      let percent = Math.min(100, (points % 100));
+      document.getElementById('progressText').textContent = percent + "%";
+      document.getElementById('progressRing').style.background =
+        `conic-gradient(gold ${percent}%, #333 ${percent}%)`;
+    }
 
-    // ✅ Manual Interstitial
-    document.getElementById("interstitialBtn").addEventListener("click", async () => {
-      try {
-        await show_9730040({ type: 'inApp', inAppSettings: { frequency: 1, interval: 1, timeout: 1, everyPage: false } });
-        addPoints(10);
-      } catch (e) {
-        alert("⚠️ Interstitial Ad not ready.");
-      }
-    });
-
-    // ✅ Manual Popup
-    document.getElementById("popupBtn").addEventListener("click", async () => {
-      try {
-        await show_9730040('pop');
-        addPoints(10);
-      } catch (e) {
-        alert("⚠️ Popup Ad not ready.");
-      }
-    });
-
-    // ✅ Auto Reward
-    document.getElementById("autoRewardBtn").addEventListener("click", () => {
-      if (autoRewardInterval) return;
-      document.getElementById("stopAutoRewardBtn").style.display = "inline-block";
-
-      runRewardAd();
-      autoRewardInterval = setInterval(runRewardAd, 20000);
-    });
-
-    document.getElementById("stopAutoRewardBtn").addEventListener("click", () => {
-      clearInterval(autoRewardInterval);
-      autoRewardInterval = null;
-      document.getElementById("stopAutoRewardBtn").style.display = "none";
-    });
-
-    // ✅ Auto Interstitial
-    document.getElementById("autoInterstitialBtn").addEventListener("click", () => {
-      if (autoInterstitialInterval) return;
-      document.getElementById("stopAutoInterstitialBtn").style.display = "inline-block";
-
-      runInterstitialAd();
-      autoInterstitialInterval = setInterval(runInterstitialAd, 20000);
-    });
-
-    document.getElementById("stopAutoInterstitialBtn").addEventListener("click", () => {
-      clearInterval(autoInterstitialInterval);
-      autoInterstitialInterval = null;
-      document.getElementById("stopAutoInterstitialBtn").style.display = "none";
-    });
-
-    // ✅ Auto Popup
-    document.getElementById("autoPopupBtn").addEventListener("click", () => {
-      if (autoPopupInterval) return;
-      document.getElementById("stopAutoPopupBtn").style.display = "inline-block";
-
-      runPopupAd();
-      autoPopupInterval = setInterval(runPopupAd, 20000);
-    });
-
-    document.getElementById("stopAutoPopupBtn").addEventListener("click", () => {
-      clearInterval(autoPopupInterval);
-      autoPopupInterval = null;
-      document.getElementById("stopAutoPopupBtn").style.display = "none";
-    });
-
-    // Helpers
-    async function runRewardAd() {
-      try {
-        await show_9730040();
-        addPoints(10);
-      } catch (e) {
-        console.log("⚠️ Auto Reward failed.");
+    // Function to play Monetag Rewarded Interstitial
+    function playAd() {
+      if (typeof window.show_9730228 === "function") {
+        show_9730228()
+          .then(() => {
+            watched++;
+            points += 5; // প্রতিটি অ্যাডে 5 পয়েন্ট
+            updateUI();
+            // User reward logic
+            alert('You have seen an ad!');
+          })
+          .catch(e => {
+            console.error("Ad error:", e);
+          });
+      } else {
+        alert("Monetag SDK not loaded yet!");
       }
     }
 
-    async function runInterstitialAd() {
-      try {
-        await show_9730040({ type: 'inApp', inAppSettings: { frequency: 1, interval: 1, timeout: 1, everyPage: false } });
-        addPoints(10);
-      } catch (e) {
-        console.log("⚠️ Auto Interstitial failed.");
-      }
+    function startAutoShow() {
+      if (autoInterval) return;
+      playAd();
+      autoInterval = setInterval(playAd, 20000); // প্রতি 20 সেকেন্ডে অ্যাড
     }
 
-    async function runPopupAd() {
-      try {
-        await show_9730040('pop');
-        addPoints(10);
-      } catch (e) {
-        console.log("⚠️ Auto Popup failed.");
-      }
+    function stopAutoShow() {
+      clearInterval(autoInterval);
+      autoInterval = null;
     }
 
-    function addPoints(val) {
-      points += val;
-      document.getElementById("points").innerText = "Points: " + points;
-    }
+    document.getElementById('watchBtn').onclick = playAd;
+    document.getElementById('autoOnBtn').onclick = startAutoShow;
+    document.getElementById('autoOffBtn').onclick = stopAutoShow;
+
+    updateUI();
   </script>
 </body>
 </html>
