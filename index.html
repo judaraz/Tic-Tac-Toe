@@ -8,24 +8,29 @@
 <!-- Telegram Web App -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-<!-- GigaPub Ads -->
-<script src="https://ad.gigapub.tech/script?id=1821"></script>
-
-<!-- AdsGram Ads -->
-<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-<script>
-  const AdController = window.Adsgram.init({ blockId: "int-13941" });
-  window.showAdsgram = () => {
-    return AdController.show();
-  };
-</script>
-
 <style>
   body { margin:0; font-family: Arial, sans-serif; background:#0a0a0a; overflow:hidden; color:white;}
-  #intro { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; z-index:2000; }
+
+  /* Intro with animated gradient background */
+  #intro {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; z-index:2000;
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    background-size: 400% 400%;
+    animation: gradientBG 12s ease infinite;
+    overflow:hidden;
+  }
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
   #intro h1 { font-size:3em; margin:0; color:#FFD700; text-shadow:2px 2px #000;}
   #intro h2 { font-size:2em; margin:5px 0; color:#00FFCC; text-shadow:2px 2px #000;}
   #intro h3 { font-size:1.5em; margin:5px 0; color:#FF4D6D; text-shadow:2px 2px #000;}
+
   #game-container { position:relative; width:100%; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1;}
   #game { display:grid; grid-template-columns:repeat(3,100px); grid-gap:16px; margin-top:20px; }
   .cell { width:100px; height:100px; font-size:3em; border-radius:20px; background:linear-gradient(145deg,#5022aa,#2f0e63); display:flex; align-items:center; justify-content:center; cursor:pointer; }
@@ -44,13 +49,14 @@
 <body>
   <!-- Intro -->
   <div id="intro">
+    <canvas id="intro-stars"></canvas>
     <h1>Welcome</h1>
     <h2>Tic Tac Toe</h2>
     <h3>If you win you are Legend</h3>
   </div>
 
   <!-- Game Container -->
-  <div id="game-container">
+  <div id="game-container" style="display:none;">
     <canvas id="stars"></canvas>
     <div id="win-glow"></div>
     <div id="lose-glow"></div>
@@ -125,24 +131,45 @@ restartBtn.addEventListener("click",resetGame);
 // Reward button → GigaPub
 rewardBtn.addEventListener("click",async()=>{try{await window.showGiga(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
 
-// Next button → AdsGram
-nextBtn.addEventListener("click",async()=>{try{await window.showAdsgram(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
+// Next button → GigaPub
+nextBtn.addEventListener("click",async()=>{try{await window.showGiga(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
 
 createBoard(); updateBoard();
 
-// Intro Animation
+// Intro → hide immediately after game ready
 const intro=document.getElementById("intro");
-setTimeout(()=>intro.style.display="none",3000);
+const gameContainer=document.getElementById("game-container");
+setTimeout(()=>{
+  intro.style.display="none";
+  gameContainer.style.display="flex";
 
-// Stars Background
+  // Lazy-load ads after intro
+  const gigapubScript = document.createElement("script");
+  gigapubScript.src = "https://ad.gigapub.tech/script?id=978";
+  gigapubScript.onload=()=>{window.showGiga=()=>window.gigapub.show();}
+  document.body.appendChild(gigapubScript);
+
+  const adsgramScript = document.createElement("script");
+  adsgramScript.src = "https://sad.adsgram.ai/js/sad.min.js";
+  adsgramScript.onload=()=>{const AdController=window.Adsgram.init({blockId:"int-13941"});window.showAdsgram=()=>AdController.show();}
+  document.body.appendChild(adsgramScript);
+}, 1200); // short delay for smooth intro
+
+// Stars Background for game
 const canvas=document.getElementById("stars");
 const ctx=canvas.getContext("2d");
 canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-let stars=[];
-for(let i=0;i<150;i++){stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, d:Math.random()*0.5+0.2});}
+let stars=[]; for(let i=0;i<150;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*2+1,d:Math.random()*0.5+0.2});}
 function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height); for(let s of stars){ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fillStyle="white"; ctx.fill(); s.y+=s.d; if(s.y>canvas.height){s.y=0; s.x=Math.random()*canvas.width;}} requestAnimationFrame(drawStars);}
 drawStars();
 
+// Stars for intro background
+const introCanvas=document.getElementById("intro-stars");
+const ictx=introCanvas.getContext("2d");
+introCanvas.width=window.innerWidth; introCanvas.height=window.innerHeight;
+let introStars=[]; for(let i=0;i<100;i++){introStars.push({x:Math.random()*introCanvas.width,y:Math.random()*introCanvas.height,r:Math.random()*2+1,d:Math.random()*0.5+0.2});}
+function drawIntroStars(){ictx.clearRect(0,0,introCanvas.width,introCanvas.height); for(let s of introStars){ictx.beginPath(); ictx.arc(s.x,s.y,s.r,0,Math.PI*2); ictx.fillStyle="white"; ictx.fill(); s.y+=s.d; if(s.y>introCanvas.height){s.y=0; s.x=Math.random()*introCanvas.width;}} requestAnimationFrame(drawIntroStars);}
+drawIntroStars();
 </script>
 </body>
 </html>
