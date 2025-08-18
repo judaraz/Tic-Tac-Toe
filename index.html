@@ -1,175 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Tic Tac Toe Game</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Player vs Computer</title>
 
-<!-- Telegram Web App -->
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Telegram Mini App -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-<style>
-  body { margin:0; font-family: Arial, sans-serif; background:#0a0a0a; overflow:hidden; color:white;}
+  <!-- GigaPub Ads (ID 1821) -->
+  <script src="https://ad.gigapub.tech/script?id=1821"></script>
 
-  /* Intro with animated gradient background */
-  #intro {
-    position:absolute; inset:0;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; z-index:2000;
-    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-    background-size: 400% 400%;
-    animation: gradientBG 12s ease infinite;
-    overflow:hidden;
-  }
-  @keyframes gradientBG {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
+  <!-- AdsGram (async, doesn’t block) -->
+  <script src="https://sad.adsgram.ai/js/sad.min.js" async></script>
 
-  #intro h1 { font-size:3em; margin:0; color:#FFD700; text-shadow:2px 2px #000;}
-  #intro h2 { font-size:2em; margin:5px 0; color:#00FFCC; text-shadow:2px 2px #000;}
-  #intro h3 { font-size:1.5em; margin:5px 0; color:#FF4D6D; text-shadow:2px 2px #000;}
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      overflow: hidden;
+    }
 
-  #game-container { position:relative; width:100%; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1;}
-  #game { display:grid; grid-template-columns:repeat(3,100px); grid-gap:16px; margin-top:20px; }
-  .cell { width:100px; height:100px; font-size:3em; border-radius:20px; background:linear-gradient(145deg,#5022aa,#2f0e63); display:flex; align-items:center; justify-content:center; cursor:pointer; }
-  .cell.X { color:#00FFCC; text-shadow:0 0 8px #00FFCC; }
-  .cell.O { color:#FF4D6D; text-shadow:0 0 8px #FF4D6D; }
-  #status,#level,#points,#notification { margin:5px; font-size:18px; font-weight:bold;}
-  #restart,#next,#reward-btn { margin:10px; padding:10px 20px; font-size:18px; border:none; border-radius:20px; cursor:pointer; }
-  #restart{background:linear-gradient(to right,#ff416c,#ff4b2b); color:white;}
-  #next{background:linear-gradient(to right,#ffb700,#ffd700); color:black; display:none;}
-  #reward-btn{background:linear-gradient(to right,#00ffcc,#00bfff); color:black;}
-  #result-overlay { position:fixed; top:40%; left:50%; transform:translate(-50%,-50%); font-size:2em; background:rgba(0,0,0,0.75); padding:20px 40px; border-radius:16px; display:none; z-index:1000; }
-  #stars, #win-glow, #lose-glow { position:absolute; inset:0; z-index:0; pointer-events:none; }
-</style>
+    /* Intro screen with gradient background */
+    #intro {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; z-index: 2000;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      background-size: 400% 400%;
+      animation: gradientBG 12s ease infinite;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Game container */
+    #game {
+      display: none;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 5px;
+      margin: 20px auto;
+    }
+    .cell {
+      width: 100px; height: 100px;
+      background: #222;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; cursor: pointer;
+    }
+
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: #ff9800;
+      color: #fff;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover { background: #e68900; }
+  </style>
 </head>
-
 <body>
   <!-- Intro -->
   <div id="intro">
-    <canvas id="intro-stars"></canvas>
-    <h1>Welcome</h1>
+    <h1>Welcome to Player vs Computer</h1>
+    <p>Get ready...</p>
+  </div>
+
+  <!-- Main Game -->
+  <div id="game">
     <h2>Tic Tac Toe</h2>
-    <h3>If you win you are Legend</h3>
+    <div id="board"></div>
+    <button id="nextBtn">Next</button>
+    <button id="rewardBtn">Reward</button>
   </div>
 
-  <!-- Game Container -->
-  <div id="game-container" style="display:none;">
-    <canvas id="stars"></canvas>
-    <div id="win-glow"></div>
-    <div id="lose-glow"></div>
+  <script>
+    const boardEl = document.getElementById("board");
+    const introEl = document.getElementById("intro");
+    const gameEl = document.getElementById("game");
+    const nextBtn = document.getElementById("nextBtn");
+    const rewardBtn = document.getElementById("rewardBtn");
 
-    <h2>Player vs Computer</h2>
-    <div id="status">Your turn (X)</div>
-    <div id="level">Level: 1 (Easy)</div>
-    <div id="points">XP: 0</div>
-    <div id="notification"></div>
-    <div id="game"></div>
-    <button id="restart">Restart</button>
-    <button id="next">Next</button>
-    <button id="reward-btn">Reward</button>
-    <div id="result-overlay"></div>
+    let board = Array(9).fill("");
 
-    <!-- Sounds -->
-    <audio id="gameover-sound" src="https://www.soundjay.com/button/sounds/button-29.mp3" preload="auto"></audio>
-    <audio id="win-sound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" preload="auto"></audio>
-    <audio id="lose-sound" src="https://www.soundjay.com/misc/sounds/fail-buzzer-01.mp3" preload="auto"></audio>
-  </div>
+    // Create game board
+    function createBoard() {
+      boardEl.innerHTML = "";
+      board.forEach((val, i) => {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.textContent = val;
+        cell.onclick = () => {
+          if (!cell.textContent) {
+            cell.textContent = "X";
+            board[i] = "X";
+            computerMove();
+          }
+        };
+        boardEl.appendChild(cell);
+      });
+    }
 
-<script>
-const tg=window.Telegram.WebApp;
-tg.expand();
+    function computerMove() {
+      const empty = board.map((v, i) => (v === "" ? i : null)).filter(v => v !== null);
+      if (empty.length > 0) {
+        const choice = empty[Math.floor(Math.random() * empty.length)];
+        board[choice] = "O";
+        createBoard();
+      }
+    }
 
-const game=document.getElementById("game"), statusText=document.getElementById("status"), restartBtn=document.getElementById("restart"), nextBtn=document.getElementById("next"), rewardBtn=document.getElementById("reward-btn"), levelText=document.getElementById("level"), pointsText=document.getElementById("points"), notification=document.getElementById("notification"), resultOverlay=document.getElementById("result-overlay"), gameoverSound=document.getElementById("gameover-sound"), winSound=document.getElementById("win-sound"), loseSound=document.getElementById("lose-sound"), winGlow=document.getElementById("win-glow"), loseGlow=document.getElementById("lose-glow");
+    // Start game immediately after DOM ready
+    window.onload = () => {
+      createBoard();
+      setTimeout(() => {
+        introEl.style.display = "none";
+        gameEl.style.display = "block";
+      }, 1000); // 1s intro then show game
+    };
 
-let board=Array(9).fill(""), gameActive=true, xp=0, notificationShown=false;
+    // Buttons → Show ads
+    nextBtn.onclick = () => {
+      if (window.gigapub) {
+        gigapub.show(); // GigaPub interstitial
+      } else {
+        alert("Ad not ready yet");
+      }
+    };
 
-const winningCombinations=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-
-function getLevelName(levelNum){const names=["Easy","Medium","Hard","Hardest"]; return names[(levelNum-1)%names.length];}
-function getLevel(){return Math.min(xp+1,201);}
-function createBoard(){game.innerHTML=""; for(let i=0;i<9;i++){const cell=document.createElement("div"); cell.classList.add("cell"); cell.dataset.index=i; cell.addEventListener("click",()=>playerMove(i)); game.appendChild(cell);}}
-function updateBoard(){document.querySelectorAll(".cell").forEach((cell,i)=>{cell.textContent=board[i]; cell.classList.remove("X","O"); if(board[i]) cell.classList.add(board[i]);}); const level=getLevel(); levelText.textContent=`Level: ${level} (${getLevelName(level)})`; pointsText.textContent=`XP: ${xp}`;}
-function getEmptyIndices(){return board.map((v,i)=>v===""?i:-1).filter(i=>i!==-1);}
-function checkWin(player){return winningCombinations.find(combo=>combo.every(i=>board[i]===player));}
-function isDraw(){return board.every(cell=>cell!=="");}
-function flashCells(combo){combo.forEach(i=>document.querySelector(`.cell[data-index='${i}']`).classList.add("flash"));}
-function showResult(text){resultOverlay.textContent=text; resultOverlay.style.display="block"; setTimeout(()=>resultOverlay.style.display="none",2000);}
-function playSound(){gameoverSound.currentTime=0; gameoverSound.play();}
-
-function playerMove(i){
-  if(!gameActive||board[i]!=="") return;
-  board[i]="X"; updateBoard();
-  const win=checkWin("X");
-  if(win){flashCells(win); gameActive=false; playSound(); winSound.currentTime=0; winSound.play(); showResult("You Win!"); xp=Math.min(xp+1,201); loseGlow.style.opacity=0; nextBtn.style.display="inline-block"; restartBtn.style.display="none"; return;}
-  if(isDraw()){gameActive=false; showResult("Draw!"); loseSound.currentTime=0; loseSound.play(); restartBtn.style.display="inline-block"; nextBtn.style.display="none"; return;}
-  statusText.textContent="Computer's turn (O)";
-  setTimeout(computerMove,500);
-}
-
-function computerMove(){
-  if(!gameActive) return;
-  const empty=getEmptyIndices();
-  if(empty.length===0) return;
-  let move=-1;
-  for(const i of empty){board[i]="O"; if(checkWin("O")){move=i; board[i]=""; break;} board[i]="";}
-  if(move===-1){for(const i of empty){board[i]="X"; if(checkWin("X")){move=i; board[i]=""; break;} board[i]="";}}
-  if(move===-1){move=empty[Math.floor(Math.random()*empty.length)];}
-  board[move]="O"; updateBoard();
-  const win=checkWin("O");
-  if(win){flashCells(win); gameActive=false; playSound(); loseSound.currentTime=0; loseSound.play(); showResult("You Lose!"); loseGlow.style.opacity=0.4; restartBtn.style.display="inline-block"; nextBtn.style.display="none"; return;}
-  if(isDraw()){gameActive=false; showResult("Draw!"); loseSound.currentTime=0; loseSound.play(); restartBtn.style.display="inline-block"; nextBtn.style.display="none"; return;}
-  statusText.textContent="Your turn (X)";
-}
-
-function resetGame(){board=Array(9).fill(""); gameActive=true; statusText.textContent="Your turn (X)"; updateBoard(); restartBtn.style.display="none"; nextBtn.style.display="none"; notification.textContent=""; notificationShown=false; loseGlow.style.opacity=0;}
-
-restartBtn.addEventListener("click",resetGame);
-
-// Reward button → GigaPub
-rewardBtn.addEventListener("click",async()=>{try{await window.showGiga(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
-
-// Next button → GigaPub
-nextBtn.addEventListener("click",async()=>{try{await window.showGiga(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
-
-createBoard(); updateBoard();
-
-// Intro → hide immediately after game ready
-const intro=document.getElementById("intro");
-const gameContainer=document.getElementById("game-container");
-setTimeout(()=>{
-  intro.style.display="none";
-  gameContainer.style.display="flex";
-
-  // Lazy-load ads after intro
-  const gigapubScript = document.createElement("script");
-  gigapubScript.src = "https://ad.gigapub.tech/script?id=978";
-  gigapubScript.onload=()=>{window.showGiga=()=>window.gigapub.show();}
-  document.body.appendChild(gigapubScript);
-
-  const adsgramScript = document.createElement("script");
-  adsgramScript.src = "https://sad.adsgram.ai/js/sad.min.js";
-  adsgramScript.onload=()=>{const AdController=window.Adsgram.init({blockId:"int-13941"});window.showAdsgram=()=>AdController.show();}
-  document.body.appendChild(adsgramScript);
-}, 1200); // short delay for smooth intro
-
-// Stars Background for game
-const canvas=document.getElementById("stars");
-const ctx=canvas.getContext("2d");
-canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-let stars=[]; for(let i=0;i<150;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*2+1,d:Math.random()*0.5+0.2});}
-function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height); for(let s of stars){ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fillStyle="white"; ctx.fill(); s.y+=s.d; if(s.y>canvas.height){s.y=0; s.x=Math.random()*canvas.width;}} requestAnimationFrame(drawStars);}
-drawStars();
-
-// Stars for intro background
-const introCanvas=document.getElementById("intro-stars");
-const ictx=introCanvas.getContext("2d");
-introCanvas.width=window.innerWidth; introCanvas.height=window.innerHeight;
-let introStars=[]; for(let i=0;i<100;i++){introStars.push({x:Math.random()*introCanvas.width,y:Math.random()*introCanvas.height,r:Math.random()*2+1,d:Math.random()*0.5+0.2});}
-function drawIntroStars(){ictx.clearRect(0,0,introCanvas.width,introCanvas.height); for(let s of introStars){ictx.beginPath(); ictx.arc(s.x,s.y,s.r,0,Math.PI*2); ictx.fillStyle="white"; ictx.fill(); s.y+=s.d; if(s.y>introCanvas.height){s.y=0; s.x=Math.random()*introCanvas.width;}} requestAnimationFrame(drawIntroStars);}
-drawIntroStars();
-</script>
+    rewardBtn.onclick = () => {
+      if (window.Adsgram) {
+        Adsgram.show(); // Rewarded ad
+      } else {
+        alert("Reward ad not ready yet");
+      }
+    };
+  </script>
 </body>
 </html>
