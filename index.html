@@ -1,157 +1,148 @@
-<!doctype html>
-<html lang="bn">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Auto Monetag Ads</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tic Tac Toe Game</title>
 
-  <!-- Monetag SDK -->
-  <script src='//libtl.com/sdk.js' data-zone='9730228' data-sdk='show_9730228'></script>
+<!-- Telegram Web App -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <style>
-    body {
-      background-color: #0e0e0e;
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      color: white;
-    }
-    .card {
-      background-color: #1a1a1a;
-      border-radius: 16px;
-      padding: 20px;
-      width: 300px;
-      text-align: center;
-      box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
-    }
-    h2 {
-      font-size: 20px;
-      font-weight: bold;
-      color: gold;
-      margin-bottom: 4px;
-    }
-    .subtitle {
-      font-size: 14px;
-      color: #aaa;
-      margin-bottom: 16px;
-    }
-    .stats {
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-    .progress-ring {
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      background: conic-gradient(gold 0%, #333 0%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 15px auto;
-    }
-    .progress-text {
-      background-color: #1a1a1a;
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      font-weight: bold;
-      color: gold;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      font-size: 15px;
-      cursor: pointer;
-    }
-    .btn-gold {
-      background: linear-gradient(to right, #ffd700, #ffb700);
-      color: black;
-    }
-    .btn-dark {
-      background: #333;
-      color: gold;
-    }
-  </style>
+<!-- GigaPub Ads -->
+<script src="https://ad.gigapub.tech/script?id=1821"></script>
+
+<!-- AdsGram Ads -->
+<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+<script>
+  const AdController = window.Adsgram.init({ blockId: "int-13941" });
+  window.showAdsgram = () => {
+    return AdController.show();
+  };
+</script>
+
+<style>
+  body { margin:0; font-family: Arial, sans-serif; background:#0a0a0a; overflow:hidden; color:white;}
+  #intro { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; z-index:2000; }
+  #intro h1 { font-size:3em; margin:0; color:#FFD700; text-shadow:2px 2px #000;}
+  #intro h2 { font-size:2em; margin:5px 0; color:#00FFCC; text-shadow:2px 2px #000;}
+  #intro h3 { font-size:1.5em; margin:5px 0; color:#FF4D6D; text-shadow:2px 2px #000;}
+  #game-container { position:relative; width:100%; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1;}
+  #game { display:grid; grid-template-columns:repeat(3,100px); grid-gap:16px; margin-top:20px; }
+  .cell { width:100px; height:100px; font-size:3em; border-radius:20px; background:linear-gradient(145deg,#5022aa,#2f0e63); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .cell.X { color:#00FFCC; text-shadow:0 0 8px #00FFCC; }
+  .cell.O { color:#FF4D6D; text-shadow:0 0 8px #FF4D6D; }
+  #status,#level,#points,#notification { margin:5px; font-size:18px; font-weight:bold;}
+  #restart,#next,#reward-btn { margin:10px; padding:10px 20px; font-size:18px; border:none; border-radius:20px; cursor:pointer; }
+  #restart{background:linear-gradient(to right,#ff416c,#ff4b2b); color:white;}
+  #next{background:linear-gradient(to right,#ffb700,#ffd700); color:black; display:none;}
+  #reward-btn{background:linear-gradient(to right,#00ffcc,#00bfff); color:black;}
+  #result-overlay { position:fixed; top:40%; left:50%; transform:translate(-50%,-50%); font-size:2em; background:rgba(0,0,0,0.75); padding:20px 40px; border-radius:16px; display:none; z-index:1000; }
+  #stars, #win-glow, #lose-glow { position:absolute; inset:0; z-index:0; pointer-events:none; }
+</style>
 </head>
+
 <body>
-  <div class="card">
-    <h2>Auto Monetag Ads</h2>
-    <div class="subtitle">Crypto Earning Lab</div>
-
-    <div class="stats">
-      Watched Ads: <span id="watchedCount">0</span><br>
-      Earned Points: <span id="earnedPoints">0</span>
-    </div>
-
-    <div class="progress-ring" id="progressRing">
-      <div class="progress-text" id="progressText">0%</div>
-    </div>
-
-    <button class="btn-gold" id="watchBtn">Watch Ad</button>
-    <button class="btn-gold" id="autoOnBtn">Auto Show Ads</button>
-    <button class="btn-gold" id="autoOffBtn">Stop Auto Ads</button>
+  <!-- Intro -->
+  <div id="intro">
+    <h1>Welcome</h1>
+    <h2>Tic Tac Toe</h2>
+    <h3>If you win you are Legend</h3>
   </div>
 
-  <script>
-    let watched = 0;
-    let points = 0;
-    let autoInterval = null;
+  <!-- Game Container -->
+  <div id="game-container">
+    <canvas id="stars"></canvas>
+    <div id="win-glow"></div>
+    <div id="lose-glow"></div>
 
-    function updateUI() {
-      document.getElementById('watchedCount').textContent = watched;
-      document.getElementById('earnedPoints').textContent = points;
-      let percent = Math.min(100, (points % 100));
-      document.getElementById('progressText').textContent = percent + "%";
-      document.getElementById('progressRing').style.background =
-        `conic-gradient(gold ${percent}%, #333 ${percent}%)`;
-    }
+    <h2>Player vs Computer</h2>
+    <div id="status">Your turn (X)</div>
+    <div id="level">Level: 1 (Easy)</div>
+    <div id="points">XP: 0</div>
+    <div id="notification"></div>
+    <div id="game"></div>
+    <button id="restart">Restart</button>
+    <button id="next">Next</button>
+    <button id="reward-btn">Reward</button>
+    <div id="result-overlay"></div>
 
-    // Function to play Monetag Rewarded Interstitial
-    function playAd() {
-      if (typeof window.show_9730228 === "function") {
-        show_9730228()
-          .then(() => {
-            watched++;
-            points += 5; // প্রতিটি অ্যাডে 5 পয়েন্ট
-            updateUI();
-            // User reward logic
-            alert('You have seen an ad!');
-          })
-          .catch(e => {
-            console.error("Ad error:", e);
-          });
-      } else {
-        alert("Monetag SDK not loaded yet!");
-      }
-    }
+    <!-- Sounds -->
+    <audio id="gameover-sound" src="https://www.soundjay.com/button/sounds/button-29.mp3" preload="auto"></audio>
+    <audio id="win-sound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" preload="auto"></audio>
+    <audio id="lose-sound" src="https://www.soundjay.com/misc/sounds/fail-buzzer-01.mp3" preload="auto"></audio>
+  </div>
 
-    function startAutoShow() {
-      if (autoInterval) return;
-      playAd();
-      autoInterval = setInterval(playAd, 20000); // প্রতি 20 সেকেন্ডে অ্যাড
-    }
+<script>
+const tg=window.Telegram.WebApp;
+tg.expand();
 
-    function stopAutoShow() {
-      clearInterval(autoInterval);
-      autoInterval = null;
-    }
+const game=document.getElementById("game"), statusText=document.getElementById("status"), restartBtn=document.getElementById("restart"), nextBtn=document.getElementById("next"), rewardBtn=document.getElementById("reward-btn"), levelText=document.getElementById("level"), pointsText=document.getElementById("points"), notification=document.getElementById("notification"), resultOverlay=document.getElementById("result-overlay"), gameoverSound=document.getElementById("gameover-sound"), winSound=document.getElementById("win-sound"), loseSound=document.getElementById("lose-sound"), winGlow=document.getElementById("win-glow"), loseGlow=document.getElementById("lose-glow");
 
-    document.getElementById('watchBtn').onclick = playAd;
-    document.getElementById('autoOnBtn').onclick = startAutoShow;
-    document.getElementById('autoOffBtn').onclick = stopAutoShow;
+let board=Array(9).fill(""), gameActive=true, xp=0, notificationShown=false;
 
-    updateUI();
-  </script>
+const winningCombinations=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+function getLevelName(levelNum){const names=["Easy","Medium","Hard","Hardest"]; return names[(levelNum-1)%names.length];}
+function getLevel(){return Math.min(xp+1,201);}
+function createBoard(){game.innerHTML=""; for(let i=0;i<9;i++){const cell=document.createElement("div"); cell.classList.add("cell"); cell.dataset.index=i; cell.addEventListener("click",()=>playerMove(i)); game.appendChild(cell);}}
+function updateBoard(){document.querySelectorAll(".cell").forEach((cell,i)=>{cell.textContent=board[i]; cell.classList.remove("X","O"); if(board[i]) cell.classList.add(board[i]);}); const level=getLevel(); levelText.textContent=`Level: ${level} (${getLevelName(level)})`; pointsText.textContent=`XP: ${xp}`;}
+function getEmptyIndices(){return board.map((v,i)=>v===""?i:-1).filter(i=>i!==-1);}
+function checkWin(player){return winningCombinations.find(combo=>combo.every(i=>board[i]===player));}
+function isDraw(){return board.every(cell=>cell!=="");}
+function flashCells(combo){combo.forEach(i=>document.querySelector(`.cell[data-index='${i}']`).classList.add("flash"));}
+function showResult(text){resultOverlay.textContent=text; resultOverlay.style.display="block"; setTimeout(()=>resultOverlay.style.display="none",2000);}
+function playSound(){gameoverSound.currentTime=0; gameoverSound.play();}
+
+function playerMove(i){
+  if(!gameActive||board[i]!=="") return;
+  board[i]="X"; updateBoard();
+  const win=checkWin("X");
+  if(win){flashCells(win); gameActive=false; playSound(); winSound.currentTime=0; winSound.play(); showResult("You Win!"); xp=Math.min(xp+1,201); loseGlow.style.opacity=0; nextBtn.style.display="inline-block"; restartBtn.style.display="none"; return;}
+  if(isDraw()){gameActive=false; showResult("Draw!"); loseSound.currentTime=0; loseSound.play(); restartBtn.style.display="inline-block"; nextBtn.style.display="none"; return;}
+  statusText.textContent="Computer's turn (O)";
+  setTimeout(computerMove,500);
+}
+
+function computerMove(){
+  if(!gameActive) return;
+  const empty=getEmptyIndices();
+  if(empty.length===0) return;
+  let move=-1;
+  for(const i of empty){board[i]="O"; if(checkWin("O")){move=i; board[i]=""; break;} board[i]="";}
+  if(move===-1){for(const i of empty){board[i]="X"; if(checkWin("X")){move=i; board[i]=""; break;} board[i]="";}}
+  if(move===-1){move=empty[Math.floor(Math.random()*empty.length)];}
+  board[move]="O"; updateBoard();
+  const win=checkWin("O");
+  if(win){flashCells(win); gameActive=false; playSound(); loseSound.currentTime=0; loseSound.play(); showResult("You Lose!"); loseGlow.style.opacity=0.4; restartBtn.style.display="inline-block"; nextBtn.style.display="none"; return;}
+  if(isDraw()){gameActive=false; showResult("Draw!"); loseSound.currentTime=0; loseSound.play(); restartBtn.style.display="inline-block"; nextBtn.style.display="none"; return;}
+  statusText.textContent="Your turn (X)";
+}
+
+function resetGame(){board=Array(9).fill(""); gameActive=true; statusText.textContent="Your turn (X)"; updateBoard(); restartBtn.style.display="none"; nextBtn.style.display="none"; notification.textContent=""; notificationShown=false; loseGlow.style.opacity=0;}
+
+restartBtn.addEventListener("click",resetGame);
+
+// Reward button → GigaPub
+rewardBtn.addEventListener("click",async()=>{try{await window.showGiga(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
+
+// Next button → AdsGram
+nextBtn.addEventListener("click",async()=>{try{await window.showAdsgram(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
+
+createBoard(); updateBoard();
+
+// Intro Animation
+const intro=document.getElementById("intro");
+setTimeout(()=>intro.style.display="none",3000);
+
+// Stars Background
+const canvas=document.getElementById("stars");
+const ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+let stars=[];
+for(let i=0;i<150;i++){stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, d:Math.random()*0.5+0.2});}
+function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height); for(let s of stars){ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fillStyle="white"; ctx.fill(); s.y+=s.d; if(s.y>canvas.height){s.y=0; s.x=Math.random()*canvas.width;}} requestAnimationFrame(drawStars);}
+drawStars();
+
+</script>
 </body>
 </html>
