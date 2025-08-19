@@ -11,6 +11,16 @@
 <!-- GigaPub Ads -->
 <script src="https://ad.gigapub.tech/script?id=1821"></script>
 
+<!-- AdsGram Ads -->
+<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+<script>
+  // Init Adsgram Reward
+  const AdController = window.Adsgram.init({ blockId: "int-13941" });
+  window.showAdsgram = () => {
+    return AdController.show();
+  };
+</script>
+
 <style>
   body { margin:0; font-family: Arial, sans-serif; background:#0a0a0a; overflow:hidden; color:white;}
   #intro { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; z-index:2000; }
@@ -54,7 +64,7 @@
     <div id="game"></div>
     <button id="restart">Restart</button>
     <button id="next">Next</button>
-    <button id="reward-btn">Reward</button>
+    <button id="reward-btn">Get Bonus XP (Watch Ad)</button>
     <div id="result-overlay"></div>
 
     <!-- Sounds -->
@@ -113,11 +123,25 @@ function resetGame(){board=Array(9).fill(""); gameActive=true; statusText.textCo
 
 restartBtn.addEventListener("click",resetGame);
 
-// Reward button → GigaPub
-rewardBtn.addEventListener("click",async()=>{try{await window.showGiga(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
+// ✅ Reward button → Adsgram (Bonus XP)
+rewardBtn.addEventListener("click",async()=>{
+  try{
+    await window.showAdsgram();
+    xp=Math.min(xp+2,201); // Bonus XP for ad
+    resetGame();
+    notification.textContent="You got bonus XP!";
+  }catch(e){alert("Ad failed!");}
+});
 
-// Next button → GigaPub
-nextBtn.addEventListener("click",async()=>{try{await window.showGiga(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
+// ✅ Next button → Free (basic function, Adsgram-compliant)
+// Optionally show GigaPub here, but not required
+nextBtn.addEventListener("click",async()=>{
+  try{
+    // Optional: keep GigaPub interstitial
+    if(window.showGiga) await window.showGiga();
+    resetGame();
+  }catch(e){ resetGame(); }
+});
 
 createBoard(); updateBoard();
 
