@@ -11,15 +11,6 @@
 <!-- GigaPub Ads -->
 <script src="https://ad.gigapub.tech/script?id=1821"></script>
 
-<!-- AdsGram Ads -->
-<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-<script>
-  const AdController = window.Adsgram.init({ blockId: "int-13941" });
-  window.showAdsgram = () => {
-    return AdController.show();
-  };
-</script>
-
 <style>
   body { margin:0; font-family: Arial, sans-serif; background:#0a0a0a; overflow:hidden; color:white;}
   #intro { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; z-index:2000; }
@@ -125,8 +116,8 @@ restartBtn.addEventListener("click",resetGame);
 // Reward button → GigaPub
 rewardBtn.addEventListener("click",async()=>{try{await window.showGiga(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
 
-// Next button → AdsGram
-nextBtn.addEventListener("click",async()=>{try{await window.showAdsgram(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
+// Next button → GigaPub
+nextBtn.addEventListener("click",async()=>{try{await window.showGiga(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
 
 createBoard(); updateBoard();
 
