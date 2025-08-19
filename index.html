@@ -11,6 +11,16 @@
 <!-- GigaPub Ads -->
 <script src="https://ad.gigapub.tech/script?id=1821"></script>
 
+<!-- AdsGram Ads -->
+<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+<script>
+  // Init Adsgram Reward
+  const AdController = window.Adsgram.init({ blockId: "int-13941" });
+  window.showAdsgram = () => {
+    return AdController.show();
+  };
+</script>
+
 <style>
   body { margin:0; font-family: Arial, sans-serif; background:#0a0a0a; overflow:hidden; color:white;}
   #intro { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; z-index:2000; }
@@ -54,7 +64,7 @@
     <div id="game"></div>
     <button id="restart">Restart</button>
     <button id="next">Next</button>
-    <button id="reward-btn">Reward</button>
+    <button id="reward-btn">Get Bonus XP (Watch Ad)</button>
     <div id="result-overlay"></div>
 
     <!-- Sounds -->
@@ -64,39 +74,96 @@
   </div>
 
 <script>
-const tg=window.Telegram.WebApp;
+const tg = window.Telegram.WebApp;
 tg.expand();
 
-const game=document.getElementById("game"), statusText=document.getElementById("status"), restartBtn=document.getElementById("restart"), nextBtn=document.getElementById("next"), rewardBtn=document.getElementById("reward-btn"), levelText=document.getElementById("level"), pointsText=document.getElementById("points"), notification=document.getElementById("notification"), resultOverlay=document.getElementById("result-overlay"), gameoverSound=document.getElementById("gameover-sound"), winSound=document.getElementById("win-sound"), loseSound=document.getElementById("lose-sound"), winGlow=document.getElementById("win-glow"), loseGlow=document.getElementById("lose-glow");
+const game = document.getElementById("game"),
+      statusText = document.getElementById("status"),
+      restartBtn = document.getElementById("restart"),
+      nextBtn = document.getElementById("next"),
+      rewardBtn = document.getElementById("reward-btn"),
+      levelText = document.getElementById("level"),
+      pointsText = document.getElementById("points"),
+      notification = document.getElementById("notification"),
+      resultOverlay = document.getElementById("result-overlay"),
+      gameoverSound = document.getElementById("gameover-sound"),
+      winSound = document.getElementById("win-sound"),
+      loseSound = document.getElementById("lose-sound"),
+      winGlow = document.getElementById("win-glow"),
+      loseGlow = document.getElementById("lose-glow");
 
-let board=Array(9).fill(""), gameActive=true, xp=0, notificationShown=false;
+let board = Array(9).fill(""), gameActive = true, xp = 0;
 
-const winningCombinations=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const winningCombinations = [
+  [0,1,2],[3,4,5],[6,7,8],
+  [0,3,6],[1,4,7],[2,5,8],
+  [0,4,8],[2,4,6]
+];
 
-function getLevelName(levelNum){const names=["Easy","Medium","Hard","Hardest"]; return names[(levelNum-1)%names.length];}
-function getLevel(){return Math.min(xp+1,201);}
-function createBoard(){game.innerHTML=""; for(let i=0;i<9;i++){const cell=document.createElement("div"); cell.classList.add("cell"); cell.dataset.index=i; cell.addEventListener("click",()=>playerMove(i)); game.appendChild(cell);}}
-function updateBoard(){document.querySelectorAll(".cell").forEach((cell,i)=>{cell.textContent=board[i]; cell.classList.remove("X","O"); if(board[i]) cell.classList.add(board[i]);}); const level=getLevel(); levelText.textContent=`Level: ${level} (${getLevelName(level)})`; pointsText.textContent=`XP: ${xp}`;}
-function getEmptyIndices(){return board.map((v,i)=>v===""?i:-1).filter(i=>i!==-1);}
-function checkWin(player){return winningCombinations.find(combo=>combo.every(i=>board[i]===player));}
-function isDraw(){return board.every(cell=>cell!=="");}
-function flashCells(combo){combo.forEach(i=>document.querySelector(`.cell[data-index='${i}']`).classList.add("flash"));}
-function showResult(text){resultOverlay.textContent=text; resultOverlay.style.display="block"; setTimeout(()=>resultOverlay.style.display="none",2000);}
-function playSound(){gameoverSound.currentTime=0; gameoverSound.play();}
+function getLevelName(levelNum) { const names = ["Easy","Medium","Hard","Hardest"]; return names[(levelNum-1)%names.length]; }
+function getLevel() { return Math.min(xp+1,201); }
+
+function createBoard() {
+  game.innerHTML="";
+  for(let i=0;i<9;i++){
+    const cell = document.createElement("div");
+    cell.classList.add("cell");
+    cell.dataset.index=i;
+    cell.addEventListener("click", ()=>playerMove(i));
+    game.appendChild(cell);
+  }
+}
+
+function updateBoard(){
+  document.querySelectorAll(".cell").forEach((cell,i)=>{
+    cell.textContent=board[i];
+    cell.classList.remove("X","O");
+    if(board[i]) cell.classList.add(board[i]);
+  });
+  const level = getLevel();
+  levelText.textContent = `Level: ${level} (${getLevelName(level)})`;
+  pointsText.textContent = `XP: ${xp}`;
+}
+
+function getEmptyIndices() { return board.map((v,i)=>v===""?i:-1).filter(i=>i!==-1); }
+function checkWin(player) { return winningCombinations.find(combo=>combo.every(i=>board[i]===player)); }
+function isDraw() { return board.every(cell=>cell!==""); }
+function flashCells(combo){ combo.forEach(i=>document.querySelector(`.cell[data-index='${i}']`).classList.add("flash")); }
+function showResult(text){ resultOverlay.textContent=text; resultOverlay.style.display="block"; setTimeout(()=>resultOverlay.style.display="none",2000); }
+function playSound(){ gameoverSound.currentTime=0; gameoverSound.play(); }
 
 function playerMove(i){
-  if(!gameActive||board[i]!=="") return;
-  board[i]="X"; updateBoard();
-  const win=checkWin("X");
-  if(win){flashCells(win); gameActive=false; playSound(); winSound.currentTime=0; winSound.play(); showResult("You Win!"); xp=Math.min(xp+1,201); loseGlow.style.opacity=0; nextBtn.style.display="inline-block"; restartBtn.style.display="none"; return;}
-  if(isDraw()){gameActive=false; showResult("Draw!"); loseSound.currentTime=0; loseSound.play(); restartBtn.style.display="inline-block"; nextBtn.style.display="none"; return;}
+  if(!gameActive || board[i]!=="") return;
+  board[i] = "X"; updateBoard();
+  const win = checkWin("X");
+  if(win){
+    flashCells(win);
+    gameActive = false;
+    playSound();
+    winSound.currentTime=0; winSound.play();
+    showResult("You Win!");
+    xp = Math.min(xp+1,201);
+    loseGlow.style.opacity=0;
+    nextBtn.style.display="inline-block";
+    restartBtn.style.display="none";
+    maybeShowGigaPub(); // optional interstitial
+    return;
+  }
+  if(isDraw()){
+    gameActive=false;
+    showResult("Draw!");
+    loseSound.currentTime=0; loseSound.play();
+    restartBtn.style.display="inline-block";
+    nextBtn.style.display="none";
+    return;
+  }
   statusText.textContent="Computer's turn (O)";
   setTimeout(computerMove,500);
 }
 
 function computerMove(){
   if(!gameActive) return;
-  const empty=getEmptyIndices();
+  const empty = getEmptyIndices();
   if(empty.length===0) return;
   let move=-1;
   for(const i of empty){board[i]="O"; if(checkWin("O")){move=i; board[i]=""; break;} board[i]="";}
@@ -104,20 +171,60 @@ function computerMove(){
   if(move===-1){move=empty[Math.floor(Math.random()*empty.length)];}
   board[move]="O"; updateBoard();
   const win=checkWin("O");
-  if(win){flashCells(win); gameActive=false; playSound(); loseSound.currentTime=0; loseSound.play(); showResult("You Lose!"); loseGlow.style.opacity=0.4; restartBtn.style.display="inline-block"; nextBtn.style.display="none"; return;}
-  if(isDraw()){gameActive=false; showResult("Draw!"); loseSound.currentTime=0; loseSound.play(); restartBtn.style.display="inline-block"; nextBtn.style.display="none"; return;}
+  if(win){
+    flashCells(win);
+    gameActive=false;
+    playSound();
+    loseSound.currentTime=0; loseSound.play();
+    showResult("You Lose!");
+    loseGlow.style.opacity=0.4;
+    restartBtn.style.display="inline-block";
+    nextBtn.style.display="none";
+    return;
+  }
+  if(isDraw()){
+    gameActive=false;
+    showResult("Draw!");
+    loseSound.currentTime=0; loseSound.play();
+    restartBtn.style.display="inline-block";
+    nextBtn.style.display="none";
+    return;
+  }
   statusText.textContent="Your turn (X)";
 }
 
-function resetGame(){board=Array(9).fill(""); gameActive=true; statusText.textContent="Your turn (X)"; updateBoard(); restartBtn.style.display="none"; nextBtn.style.display="none"; notification.textContent=""; notificationShown=false; loseGlow.style.opacity=0;}
+function resetGame(){
+  board = Array(9).fill("");
+  gameActive = true;
+  statusText.textContent="Your turn (X)";
+  updateBoard();
+  restartBtn.style.display="none";
+  nextBtn.style.display="none";
+  notification.textContent="";
+  loseGlow.style.opacity=0;
+}
 
-restartBtn.addEventListener("click",resetGame);
+restartBtn.addEventListener("click", resetGame);
 
-// Reward button → GigaPub
-rewardBtn.addEventListener("click",async()=>{try{await window.showGiga(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
+// Reward button → AdsGram
+rewardBtn.addEventListener("click", async()=>{
+  try{
+    await window.showAdsgram();
+    xp = Math.min(xp+2, 201); // bonus XP
+    resetGame();
+    notification.textContent = "You got bonus XP!";
+  } catch(e){ alert("Ad failed!"); }
+});
 
-// Next button → GigaPub
-nextBtn.addEventListener("click",async()=>{try{await window.showGiga(); xp=Math.min(xp+1,201); resetGame();}catch(e){alert("Ad failed!");}});
+// Next button → free, no forced ad
+nextBtn.addEventListener("click", ()=>{ resetGame(); });
+
+// Optional GigaPub after win (random 30%)
+function maybeShowGigaPub(){
+  if(Math.random() < 0.3){
+    try{ if(window.showGiga) window.showGiga(); } catch(e){}
+  }
+}
 
 createBoard(); updateBoard();
 
