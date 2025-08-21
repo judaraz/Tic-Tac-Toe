@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Auto GigaPub Ads</title>
+  <title>Unlimited Auto GigaPub Ads</title>
 
-  <!-- GigaPub Script -->
+  <!-- GigaPub Script (ID 1821) -->
   <script src="https://ad.gigapub.tech/script?id=1821"></script>
 
   <style>
@@ -78,15 +78,11 @@
       background: linear-gradient(to right, #ffd700, #ffb700);
       color: black;
     }
-    .btn-dark {
-      background: #333;
-      color: gold;
-    }
   </style>
 </head>
 <body>
   <div class="card">
-    <h2>Auto GigaPub Ads</h2>
+    <h2>Unlimited GigaPub Ads</h2>
     <div class="subtitle">Crypto Earning Lab</div>
 
     <div class="stats">
@@ -99,14 +95,14 @@
     </div>
 
     <button class="btn-gold" id="watchBtn">Watch Ad</button>
-    <button class="btn-gold" id="autoOnBtn">Auto Show Ads</button>
-    <button class="btn-gold" id="autoOffBtn">Stop Auto Ads</button>
+    <button class="btn-gold" id="autoOnBtn">Start Unlimited Ads</button>
+    <button class="btn-gold" id="autoOffBtn">Stop Ads</button>
   </div>
 
   <script>
     let watched = 0;
     let points = 0;
-    let autoInterval = null;
+    let autoRunning = false;
 
     function updateUI() {
       document.getElementById('watchedCount').textContent = watched;
@@ -114,39 +110,43 @@
       let percent = Math.min(100, (points % 100));
       document.getElementById('progressText').textContent = percent + "%";
       document.getElementById('progressRing').style.background =
-        conic-gradient(gold ${percent}%, #333 ${percent}%);
+        `conic-gradient(gold ${percent}%, #333 ${percent}%)`;
     }
 
-    function playAd() {
+    function playAd(next = false) {
       if (typeof window.showGiga === "function") {
         window.showGiga()
           .then(() => {
             watched++;
-            points += 5; // প্রতিটি অ্যাডে 5 পয়েন্ট
+            points += 5; 
             updateUI();
+
+            // যদি auto চালু থাকে, তাহলে সাথে সাথে পরের Ad দেখাবে
+            if (autoRunning && next) {
+              playAd(true);
+            }
           })
           .catch(e => {
             console.error("Ad error:", e);
           });
       } else {
-        alert("GigaPub script not loaded yet!");
+        console.warn("GigaPub script not loaded yet!");
       }
     }
 
-    function startAutoShow() {
-      if (autoInterval) return;
-      playAd();
-      autoInterval = setInterval(playAd, 20000); // প্রতি 20 সেকেন্ডে অ্যাড
+    function startUnlimitedAds() {
+      if (autoRunning) return;
+      autoRunning = true;
+      playAd(true); // সাথে সাথেই প্রথম Ad শুরু হবে
     }
 
-    function stopAutoShow() {
-      clearInterval(autoInterval);
-      autoInterval = null;
+    function stopUnlimitedAds() {
+      autoRunning = false;
     }
 
-    document.getElementById('watchBtn').onclick = playAd;
-    document.getElementById('autoOnBtn').onclick = startAutoShow;
-    document.getElementById('autoOffBtn').onclick = stopAutoShow;
+    document.getElementById('watchBtn').onclick = () => playAd(false);
+    document.getElementById('autoOnBtn').onclick = startUnlimitedAds;
+    document.getElementById('autoOffBtn').onclick = stopUnlimitedAds;
 
     updateUI();
   </script>
