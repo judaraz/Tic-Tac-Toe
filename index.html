@@ -8,15 +8,16 @@
   <!-- Telegram Web App -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Monetag SDK with both ads IDs -->
-  <script 
-    src="https://js.monetag.com/sdk.js" 
-    data-zone="3035767" 
-    data-sdk="show_3035767,show_9858364">
-  </script>
-
   <!-- GigaPub Ads -->
   <script src="https://ad.gigapub.tech/script?id=978"></script>
+
+  <!-- Monetag SDK (async) -->
+  <script
+    src="https://js.monetag.com/sdk.js"
+    data-zone="3035767"
+    data-sdk="show_3035767,show_9858364"
+    async
+  ></script>
 
   <style>
     body { margin:0; font-family: Arial, sans-serif; background:#0a0a0a; overflow:hidden; color:white;}
@@ -61,7 +62,7 @@
     <div id="game"></div>
     <button id="restart">Restart</button>
     <button id="next">Next</button>
-    <button id="reward-btn">Watch Ads to Get Next Level</button>
+    <button id="reward-btn" disabled>Watch Ads to Get Next Level</button>
     <div id="result-overlay"></div>
 
     <!-- Sounds -->
@@ -247,18 +248,20 @@ function resetGame() {
   loseGlow.style.opacity = 0;
 }
 
-// Reward button → Monetag rewarded interstitial (id 3035767)
+// Reward button → GigaPub (fallback)
 rewardBtn.addEventListener("click", async () => {
-  if (typeof show_3035767 !== "function") {
-    alert("Ad not loaded yet.");
+  if (!monetagReadyFlag) {
+    alert("Ads are loading, please wait...");
     return;
   }
   try {
+    // Monetag rewarded ad
     await show_3035767();
-    xp = Math.min(xp + 1, 201); 
-    resetGame(); 
+    xp = Math.min(xp + 1, 201);
+    resetGame();
   } catch (e) {
-    alert("Ad failed!");
+    console.error("Monetag ad failed:", e);
+    alert("Ad failed or skipped!");
   }
 });
 
@@ -315,19 +318,19 @@ function drawStars() {
 }
 drawStars();
 
-// --- Monetag SDK readiness & In-App Interstitial init ---
+// ===== MONETAG SDK LOAD CHECK =====
+let monetagReadyFlag = false;
 function monetagReady(callback) {
   const tries = 20;
   let attempt = 0;
   const interval = setInterval(() => {
     attempt++;
-    if (
-      typeof window.show_3035767 === 'function' &&
-      typeof window.show_9858364 === 'function'
-    ) {
+    if (typeof window.show_3035767 === "function") {
       clearInterval(interval);
-      console.log("✅ Monetag SDK is loaded");
-      callback();
+      monetagReadyFlag = true;
+      rewardBtn.disabled = false; // enable button once ready
+      console.log("✅ Monetag SDK loaded");
+      if (callback) callback();
     } else {
       console.log("⏳ Waiting for Monetag SDK... attempt", attempt);
       if (attempt >= tries) {
@@ -338,23 +341,8 @@ function monetagReady(callback) {
   }, 500);
 }
 
-monetagReady(() => {
-  try {
-    show_9858364({
-      type: 'inApp',
-      inAppSettings: {
-        frequency: 2,
-        capping: 0.1,
-        interval: 30,
-        timeout: 5,
-        everyPage: false
-      }
-    });
-    console.log("✅ In-App Interstitial initialized");
-  } catch (e) {
-    console.error("❌ Error starting in-app interstitial", e);
-  }
-});
+monetagReady();
+
 </script>
 </body>
 </html>
