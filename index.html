@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src='//libtl.com/sdk.js' data-zone='9730228' data-sdk='show_3035767'></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tic Tac Toe Game</title>
@@ -9,15 +8,17 @@
   <!-- Telegram Web App -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Monetag Rewarded Ad Simulation (Replace with real script if needed) -->
+  <!-- Monetag Rewarded Interstitial Script -->
+  <script 
+    src="https://cdn.monetag.com/sdk.js" 
+    data-zone="3035767" 
+    data-sdk="show_3035767"
+  ></script>
   <script>
-    function show_3035767() {
-      return new Promise((resolve, reject) => {
-        // Simulate ad watching – Replace this with real Monetag integration
-        setTimeout(() => {
-          alert("You have seen an ad!");
-          resolve();
-        }, 3000); // Simulated 3s delay
+    // Optional: preload the ad when app loads
+    if (window.show_3035767) {
+      window.show_3035767({ type: 'preload' }).catch(() => {
+        console.log('Monetag preload failed');
       });
     }
   </script>
@@ -253,10 +254,14 @@ function resetGame() {
 
 // Reward button → Monetag
 rewardBtn.addEventListener("click", async () => {
+  if (!window.show_3035767) {
+    alert('Monetag SDK not loaded yet');
+    return;
+  }
   try {
-    await show_9858364();
-    xp = Math.min(xp + 1, 201); 
-    resetGame(); 
+    await window.show_3035767();
+    xp = Math.min(xp + 1, 201);
+    resetGame();
   } catch (e) {
     alert("Ad failed or skipped!");
   }
@@ -264,17 +269,21 @@ rewardBtn.addEventListener("click", async () => {
 
 // Next button → Monetag 50% chance
 nextBtn.addEventListener("click", async () => {
+  if (!window.show_3035767) {
+    alert('Monetag SDK not loaded yet');
+    return;
+  }
   const showAd = Math.random() > 0.5;
   if (showAd) {
     try {
-      await show_9858364();
-      xp = Math.min(xp + 1, 201); 
+      await window.show_3035767();
+      xp = Math.min(xp + 1, 201);
       resetGame();
     } catch (e) {
       alert("Ad failed or skipped!");
     }
   } else {
-    xp = Math.min(xp + 1, 201); 
+    xp = Math.min(xp + 1, 201);
     resetGame();
   }
 });
@@ -289,7 +298,7 @@ setTimeout(() => intro.style.display = "none", 3000);
 // Stars Background
 const canvas = document.getElementById("stars");
 const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth; 
+canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 let stars = [];
@@ -298,16 +307,16 @@ for (let i = 0; i < 150; i++) {
 }
 
 function drawStars() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height); 
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   for (let s of stars) {
-    ctx.beginPath(); 
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); 
-    ctx.fillStyle = "white"; 
-    ctx.fill(); 
-    s.y += s.d; 
-    if (s.y > canvas.height) { 
-      s.y = 0; 
-      s.x = Math.random() * canvas.width; 
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = "white";
+    ctx.fill();
+    s.y += s.d;
+    if (s.y > canvas.height) {
+      s.y = 0;
+      s.x = Math.random() * canvas.width;
     }
   }
   requestAnimationFrame(drawStars);
