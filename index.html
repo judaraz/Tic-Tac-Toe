@@ -8,20 +8,8 @@
   <!-- Telegram Web App -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Monetag Rewarded Interstitial Script -->
-  <script 
-    src="https://cdn.monetag.com/sdk.js" 
-    data-zone="3035767" 
-    data-sdk="show_3035767"
-  ></script>
-  <script>
-    // Optional: preload the ad when app loads
-    if (window.show_3035767) {
-      window.show_3035767({ type: 'preload' }).catch(() => {
-        console.log('Monetag preload failed');
-      });
-    }
-  </script>
+  <!-- ✅ Monetag SDK (Correct Script) -->
+  <script src="https://js.monetag.com/show_3035767.js"></script>
 
   <style>
     body { margin:0; font-family: Arial, sans-serif; background:#0a0a0a; overflow:hidden; color:white;}
@@ -94,7 +82,7 @@ const game = document.getElementById("game"),
       winGlow = document.getElementById("win-glow"),
       loseGlow = document.getElementById("lose-glow");
 
-let board = Array(9).fill(""), gameActive = true, xp = 0, notificationShown = false;
+let board = Array(9).fill(""), gameActive = true, xp = 0;
 
 const winningCombinations = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -131,7 +119,9 @@ function updateBoard() {
   pointsText.textContent = `XP: ${xp}`;
 }
 
-function getEmptyIndices() { return board.map((v, i) => v === "" ? i : -1).filter(i => i !== -1); }
+function getEmptyIndices() {
+  return board.map((v, i) => v === "" ? i : -1).filter(i => i !== -1);
+}
 
 function checkWin(player) {
   return winningCombinations.find(combo => combo.every(i => board[i] === player));
@@ -247,47 +237,39 @@ function resetGame() {
   updateBoard(); 
   restartBtn.style.display = "none"; 
   nextBtn.style.display = "none"; 
-  notification.textContent = ""; 
-  notificationShown = false; 
   loseGlow.style.opacity = 0;
 }
 
-// Reward button → Monetag
+// ✅ Reward Ad Button (Monetag)
 rewardBtn.addEventListener("click", async () => {
-  if (!window.show_3035767) {
+  if (typeof window.show_3035767 !== 'function') {
     alert('Monetag SDK not loaded yet');
     return;
   }
   try {
     await window.show_3035767();
-    xp = Math.min(xp + 1, 201);
-    resetGame();
+    xp = Math.min(xp + 1, 201); 
+    resetGame(); 
   } catch (e) {
     alert("Ad failed or skipped!");
   }
 });
 
-// Next button → Monetag 50% chance
+// ✅ Next Button (Monetag 50% chance)
 nextBtn.addEventListener("click", async () => {
-  if (!window.show_3035767) {
-    alert('Monetag SDK not loaded yet');
-    return;
-  }
   const showAd = Math.random() > 0.5;
-  if (showAd) {
+  if (showAd && typeof window.show_3035767 === 'function') {
     try {
       await window.show_3035767();
-      xp = Math.min(xp + 1, 201);
-      resetGame();
     } catch (e) {
-      alert("Ad failed or skipped!");
+      alert("Ad failed!");
     }
-  } else {
-    xp = Math.min(xp + 1, 201);
-    resetGame();
   }
+  xp = Math.min(xp + 1, 201);
+  resetGame();
 });
 
+// Init
 createBoard();
 updateBoard();
 
@@ -298,7 +280,7 @@ setTimeout(() => intro.style.display = "none", 3000);
 // Stars Background
 const canvas = document.getElementById("stars");
 const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
+canvas.width = window.innerWidth; 
 canvas.height = window.innerHeight;
 
 let stars = [];
@@ -307,16 +289,16 @@ for (let i = 0; i < 150; i++) {
 }
 
 function drawStars() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height); 
   for (let s of stars) {
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = "white";
-    ctx.fill();
-    s.y += s.d;
-    if (s.y > canvas.height) {
-      s.y = 0;
-      s.x = Math.random() * canvas.width;
+    ctx.beginPath(); 
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); 
+    ctx.fillStyle = "white"; 
+    ctx.fill(); 
+    s.y += s.d; 
+    if (s.y > canvas.height) { 
+      s.y = 0; 
+      s.x = Math.random() * canvas.width; 
     }
   }
   requestAnimationFrame(drawStars);
