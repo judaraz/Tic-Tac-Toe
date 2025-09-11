@@ -1,348 +1,233 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tic Tac Toe Game</title>
-
-  <!-- Telegram Web App -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tasks — Telegram Mini App</title>
+  <!-- Telegram Web App JS -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-  <!-- GigaPub Ads -->
-  <script src="https://ad.gigapub.tech/script?id=978"></script>
-
-  <!-- Monetag SDK (async) -->
-  <script
-    src="https://js.monetag.com/sdk.js"
-    data-zone="3035767"
-    data-sdk="show_3035767,show_9858364"
-    async
-  ></script>
-
   <style>
-    body { margin:0; font-family: Arial, sans-serif; background:#0a0a0a; overflow:hidden; color:white;}
-    #intro { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; z-index:2000; }
-    #intro h1 { font-size:3em; margin:0; color:#FFD700; text-shadow:2px 2px #000;}
-    #intro h2 { font-size:2em; margin:5px 0; color:#00FFCC; text-shadow:2px 2px #000;}
-    #intro h3 { font-size:1.5em; margin:5px 0; color:#FF4D6D; text-shadow:2px 2px #000;}
-    #game-container { position:relative; width:100%; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1;}
-    #game { display:grid; grid-template-columns:repeat(3,100px); grid-gap:16px; margin-top:20px; }
-    .cell { width:100px; height:100px; font-size:3em; border-radius:20px; background:linear-gradient(145deg,#5022aa,#2f0e63); display:flex; align-items:center; justify-content:center; cursor:pointer; }
-    .cell.X { color:#00FFCC; text-shadow:0 0 8px #00FFCC; }
-    .cell.O { color:#FF4D6D; text-shadow:0 0 8px #FF4D6D; }
-    #status,#level,#points,#notification { margin:5px; font-size:18px; font-weight:bold;}
-    #restart,#next,#reward-btn { margin:10px; padding:10px 20px; font-size:18px; border:none; border-radius:20px; cursor:pointer; }
-    #restart{background:linear-gradient(to right,#ff416c,#ff4b2b); color:white;}
-    #next{background:linear-gradient(to right,#ffb700,#ffd700); color:black; display:none;}
-    #reward-btn{background:linear-gradient(to right,#00ffcc,#00bfff); color:black;}
-    #result-overlay { position:fixed; top:40%; left:50%; transform:translate(-50%,-50%); font-size:2em; background:rgba(0,0,0,0.75); padding:20px 40px; border-radius:16px; display:none; z-index:1000; }
-    #stars, #win-glow, #lose-glow { position:absolute; inset:0; z-index:0; pointer-events:none; }
+    :root{--accent:#ffb000;--bg:#0f0f10;--card:#131313;--muted:#9b9b9b;--white:#ffffff}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    body{background:linear-gradient(0deg, #fff 0%, #fff 0%);display:flex;align-items:center;justify-content:center;padding:18px}
+    .frame{width:380px;border-radius:20px;padding:0;background:#ffb000;box-shadow:0 6px 0 rgba(0,0,0,0.06)}
+    .device{background:var(--bg);border-radius:14px;padding:0 0 22px;overflow:hidden}
+    header{height:86px;padding:18px 18px 12px;color:var(--white);display:flex;flex-direction:column}
+    header .top{display:flex;align-items:center;justify-content:space-between}
+    header h1{margin:0;font-size:20px;font-weight:600}
+    .subtitle{opacity:0.6;font-size:13px}
+    main{padding:18px}
+    .section-title{color:var(--white);font-size:34px;margin:6px 0 8px}
+    .section-sub{color:var(--muted);font-size:14px;margin-bottom:12px}
+    .card{background:linear-gradient(0deg,#ffb000 0%, #ffb000 0%);display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:8px;margin-bottom:14px}
+    .card.dark{background:var(--card)}
+    .left{display:flex;align-items:center;gap:14px}
+    .emoji{font-size:42px}
+    .text{color:var(--white)}
+    .title{font-size:18px;margin:0}
+    .meta{font-size:12px;color:rgba(255,255,255,0.85);opacity:0.9}
+    .btn{background:var(--white);color:var(--bg);padding:8px 14px;border-radius:22px;font-weight:600;border:none;cursor:pointer}
+    .muted-card{background:var(--card);padding:18px;border-radius:8px;color:var(--white)}
+    .small-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+    .clock-badge{width:40px;height:40px;border-radius:50%;background:linear-gradient(180deg,#2b2b2b,#181818);display:flex;align-items:center;justify-content:center;color:#fff}
+    footer{height:8px}
+    /* responsive smaller */
+    @media(max-width:420px){.frame{width:360px}}
   </style>
 </head>
-
 <body>
-  <!-- Intro -->
-  <div id="intro">
-    <h1>Welcome</h1>
-    <h2>Tic Tac Toe</h2>
-    <h3>If you win you are Legend</h3>
+  <div class="frame" role="application">
+    <div class="device">
+      <header>
+        <div class="top">
+          <div style="opacity:0.95">Close</div>
+          <h1>Your app</h1>
+          <div style="opacity:0.6">⋯</div>
+        </div>
+        <div style="margin-top:8px">
+          <div class="section-title">Tasks</div>
+          <div class="subtitle">Get rewards for actions</div>
+        </div>
+      </header>
+
+      <main>
+        <!-- Rewarded Interstitial (orange) -->
+        <div class="card" id="rewarded-interstitial">
+          <div class="left">
+            <div class="emoji">🤩</div>
+            <div>
+              <p class="title">Watch short ads</p>
+              <div class="meta">Rewarded Interstitial</div>
+            </div>
+          </div>
+          <div>
+            <button class="btn" id="btn-rewarded-interstitial">Claim</button>
+          </div>
+        </div>
+
+        <!-- Rewarded Popup (dark) -->
+        <div class="card dark" id="rewarded-popup" style="margin-bottom:18px">
+          <div class="left">
+            <div class="emoji">😎</div>
+            <div>
+              <p class="title">Click to get reward</p>
+              <div class="meta">Rewarded Popup</div>
+            </div>
+          </div>
+          <div>
+            <button class="btn" id="btn-rewarded-popup">Claim</button>
+          </div>
+        </div>
+
+        <div class="muted-card">
+          <div style="font-size:22px;margin-bottom:6px">Daily</div>
+          <div style="color:var(--muted);font-size:13px;margin-bottom:14px">After time actions</div>
+
+          <div class="small-row">
+            <div style="display:flex;align-items:center;gap:14px">
+              <div class="emoji" style="font-size:36px">👀</div>
+              <div>
+                <div class="title">Watch video</div>
+                <div class="meta">In-App Interstitial</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="clock-badge">⏱</div>
+              <button class="btn" id="btn-inapp">Watch</button>
+            </div>
+          </div>
+        </div>
+      </main>
+      <footer></footer>
+    </div>
   </div>
 
-  <!-- Game Container -->
-  <div id="game-container">
-    <canvas id="stars"></canvas>
-    <div id="win-glow"></div>
-    <div id="lose-glow"></div>
-
-    <h2>Player vs Computer</h2>
-    <div id="status">Your turn (X)</div>
-    <div id="level">Level: 1 (Easy)</div>
-    <div id="points">XP: 0</div>
-    <div id="notification"></div>
-    <div id="game"></div>
-    <button id="restart">Restart</button>
-    <button id="next">Next</button>
-    <button id="reward-btn" disabled>Watch Ads to Get Next Level</button>
-    <div id="result-overlay"></div>
-
-    <!-- Sounds -->
-    <audio id="gameover-sound" src="https://www.soundjay.com/button/sounds/button-29.mp3" preload="auto"></audio>
-    <audio id="win-sound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" preload="auto"></audio>
-    <audio id="lose-sound" src="https://www.soundjay.com/misc/sounds/fail-buzzer-01.mp3" preload="auto"></audio>
-  </div>
-
-<script>
-const tg = window.Telegram.WebApp;
-tg.expand();
-
-const game = document.getElementById("game"),
-      statusText = document.getElementById("status"),
-      restartBtn = document.getElementById("restart"),
-      nextBtn = document.getElementById("next"),
-      rewardBtn = document.getElementById("reward-btn"),
-      levelText = document.getElementById("level"),
-      pointsText = document.getElementById("points"),
-      notification = document.getElementById("notification"),
-      resultOverlay = document.getElementById("result-overlay"),
-      gameoverSound = document.getElementById("gameover-sound"),
-      winSound = document.getElementById("win-sound"),
-      loseSound = document.getElementById("lose-sound"),
-      winGlow = document.getElementById("win-glow"),
-      loseGlow = document.getElementById("lose-glow");
-
-let board = Array(9).fill(""), gameActive = true, xp = 0, notificationShown = false;
-
-const winningCombinations = [
-  [0, 1, 2], [3, 4, 5], [6, 7, 8],
-  [0, 3, 6], [1, 4, 7], [2, 5, 8],
-  [0, 4, 8], [2, 4, 6]
-];
-
-function getLevelName(levelNum) { 
-  const names = ["Easy", "Medium", "Hard", "Hardest"];
-  return names[(levelNum - 1) % names.length]; 
-}
-
-function getLevel() { return Math.min(xp + 1, 201); }
-
-function createBoard() {
-  game.innerHTML = "";
-  for (let i = 0; i < 9; i++) {
-    const cell = document.createElement("div");
-    cell.classList.add("cell");
-    cell.dataset.index = i;
-    cell.addEventListener("click", () => playerMove(i));
-    game.appendChild(cell);
-  }
-}
-
-function updateBoard() {
-  document.querySelectorAll(".cell").forEach((cell, i) => {
-    cell.textContent = board[i];
-    cell.classList.remove("X", "O");
-    if (board[i]) cell.classList.add(board[i]);
-  });
-  const level = getLevel();
-  levelText.textContent = `Level: ${level} (${getLevelName(level)})`;
-  pointsText.textContent = `XP: ${xp}`;
-}
-
-function getEmptyIndices() { return board.map((v, i) => v === "" ? i : -1).filter(i => i !== -1); }
-
-function checkWin(player) {
-  return winningCombinations.find(combo => combo.every(i => board[i] === player));
-}
-
-function isDraw() { return board.every(cell => cell !== ""); }
-
-function flashCells(combo) {
-  combo.forEach(i => document.querySelector(`.cell[data-index='${i}']`).classList.add("flash"));
-}
-
-function showResult(text) {
-  resultOverlay.textContent = text;
-  resultOverlay.style.display = "block";
-  setTimeout(() => resultOverlay.style.display = "none", 2000);
-}
-
-function playSound() { 
-  gameoverSound.currentTime = 0; 
-  gameoverSound.play(); 
-}
-
-function playerMove(i) {
-  if (!gameActive || board[i] !== "") return;
-  board[i] = "X"; 
-  updateBoard();
-  const win = checkWin("X");
-  if (win) { 
-    flashCells(win); 
-    gameActive = false; 
-    playSound(); 
-    winSound.currentTime = 0; 
-    winSound.play(); 
-    showResult("You Win!"); 
-    xp = Math.min(xp + 1, 201); 
-    loseGlow.style.opacity = 0; 
-    nextBtn.style.display = "inline-block"; 
-    restartBtn.style.display = "none"; 
-    return; 
-  }
-  if (isDraw()) { 
-    gameActive = false; 
-    showResult("Draw!"); 
-    loseSound.currentTime = 0; 
-    loseSound.play(); 
-    restartBtn.style.display = "inline-block"; 
-    nextBtn.style.display = "none"; 
-    return; 
-  }
-  statusText.textContent = "Computer's turn (O)";
-  setTimeout(computerMove, 500);
-}
-
-function computerMove() {
-  if (!gameActive) return;
-  const empty = getEmptyIndices();
-  if (empty.length === 0) return;
-  let move = -1;
-  for (const i of empty) {
-    board[i] = "O"; 
-    if (checkWin("O")) { 
-      move = i; 
-      board[i] = ""; 
-      break; 
+  <script>
+    // Telegram WebApp helper
+    const tg = window.Telegram.WebApp || null;
+    if (tg){
+      tg.expand();
+      // You can use tg.MainButton / tg.BackButton here if needed
     }
-    board[i] = "";
-  }
-  if (move === -1) {
-    for (const i of empty) {
-      board[i] = "X"; 
-      if (checkWin("X")) { 
-        move = i; 
-        board[i] = ""; 
-        break; 
+
+    // --- Ad SDK integration ---
+    // NOTE: This file assumes the ad SDK exposes a global function `show_9730228` (as in your snippet).
+    // If your ad provider requires an external script, load it first. Example:
+    // const s = document.createElement('script'); s.src = 'https://cdn.adprovider.example/sdk.js'; document.head.appendChild(s);
+
+    // Setup in-app interstitial automatic behavior on load
+    function initInApp() {
+      try{
+        // call your in-app scheduler with the settings provided
+        if (typeof show_9730228 === 'function'){
+          show_9730228({
+            type: 'inApp',
+            inAppSettings: {
+              frequency: 2,
+              capping: 0.1,
+              interval: 30,
+              timeout: 5,
+              everyPage: false
+            }
+          });
+        } else {
+          console.warn('show_9730228 is not defined. Make sure the ad SDK script is loaded.');
+        }
+      } catch(e){console.error('inApp init error', e)}
+    }
+
+    // Rewarded Popup
+    async function showRewardedPopup(){
+      if (typeof show_9730228 !== 'function'){
+        alert('Ad SDK not loaded');
+        return;
       }
-      board[i] = "";
-    }
-  }
-  if (move === -1) {
-    move = empty[Math.floor(Math.random() * empty.length)];
-  }
-  board[move] = "O"; 
-  updateBoard();
-  const win = checkWin("O");
-  if (win) { 
-    flashCells(win); 
-    gameActive = false; 
-    playSound(); 
-    loseSound.currentTime = 0; 
-    loseSound.play(); 
-    showResult("You Lose!"); 
-    loseGlow.style.opacity = 0.4; 
-    restartBtn.style.display = "inline-block"; 
-    nextBtn.style.display = "none"; 
-    return; 
-  }
-  if (isDraw()) { 
-    gameActive = false; 
-    showResult("Draw!"); 
-    loseSound.currentTime = 0; 
-    loseSound.play(); 
-    restartBtn.style.display = "inline-block"; 
-    nextBtn.style.display = "none"; 
-    return; 
-  }
-  statusText.textContent = "Your turn (X)";
-}
-
-function resetGame() {
-  board = Array(9).fill(""); 
-  gameActive = true; 
-  statusText.textContent = "Your turn (X)"; 
-  updateBoard(); 
-  restartBtn.style.display = "none"; 
-  nextBtn.style.display = "none"; 
-  notification.textContent = ""; 
-  notificationShown = false; 
-  loseGlow.style.opacity = 0;
-}
-
-// Reward button → GigaPub (fallback)
-rewardBtn.addEventListener("click", async () => {
-  if (!monetagReadyFlag) {
-    alert("Ads are loading, please wait...");
-    return;
-  }
-  try {
-    // Monetag rewarded ad
-    await show_3035767();
-    xp = Math.min(xp + 1, 201);
-    resetGame();
-  } catch (e) {
-    console.error("Monetag ad failed:", e);
-    alert("Ad failed or skipped!");
-  }
-});
-
-// Next button → Randomly show GigaPub ad or increase level and XP
-nextBtn.addEventListener("click", async () => {
-  const showAd = Math.random() > 0.5; // 50% chance to show ad
-
-  if (showAd) {
-    try {
-      await window.showGiga();
-      xp = Math.min(xp + 1, 201); 
-      resetGame();
-    } catch (e) {
-      alert("Ad failed!");
-    }
-  } else {
-    xp = Math.min(xp + 1, 201); 
-    resetGame();
-  }
-});
-
-createBoard();
-updateBoard();
-
-// Intro Animation
-const intro = document.getElementById("intro");
-setTimeout(() => intro.style.display = "none", 3000);
-
-// Stars Background
-const canvas = document.getElementById("stars");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth; 
-canvas.height = window.innerHeight;
-
-let stars = [];
-for (let i = 0; i < 150; i++) {
-  stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 2 + 1, d: Math.random() * 0.5 + 0.2 });
-}
-
-function drawStars() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height); 
-  for (let s of stars) {
-    ctx.beginPath(); 
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); 
-    ctx.fillStyle = "white"; 
-    ctx.fill(); 
-    s.y += s.d; 
-    if (s.y > canvas.height) { 
-      s.y = 0; 
-      s.x = Math.random() * canvas.width; 
-    }
-  }
-  requestAnimationFrame(drawStars);
-}
-drawStars();
-
-// ===== MONETAG SDK LOAD CHECK =====
-let monetagReadyFlag = false;
-function monetagReady(callback) {
-  const tries = 20;
-  let attempt = 0;
-  const interval = setInterval(() => {
-    attempt++;
-    if (typeof window.show_3035767 === "function") {
-      clearInterval(interval);
-      monetagReadyFlag = true;
-      rewardBtn.disabled = false; // enable button once ready
-      console.log("✅ Monetag SDK loaded");
-      if (callback) callback();
-    } else {
-      console.log("⏳ Waiting for Monetag SDK... attempt", attempt);
-      if (attempt >= tries) {
-        clearInterval(interval);
-        console.error("❌ Monetag SDK did not load");
+      try{
+        await show_9730228('pop');
+        // Reward the user here
+        rewardUser('popup');
+      } catch(e){
+        console.warn('Popup ad failed or was closed', e);
       }
     }
-  }, 500);
-}
 
-monetagReady();
+    // Rewarded Interstitial
+    async function showRewardedInterstitial(){
+      if (typeof show_9730228 !== 'function'){
+        alert('Ad SDK not loaded');
+        return;
+      }
+      try{
+        await show_9730228();
+        // Reward the user here
+        rewardUser('interstitial');
+      } catch(e){
+        console.warn('Rewarded interstitial error', e);
+      }
+    }
 
-</script>
+    // Manual In-App ad trigger (if you want to force one)
+    function triggerInAppNow(){
+      if (typeof show_9730228 === 'function'){
+        // Some providers allow calling with {type:'inApp', immediate:true} or similar.
+        // Here we call the same function without params to show an interstitial if available.
+        try{
+          show_9730228({type:'inApp', inAppSettings:{frequency:1, capping:0.01, interval:0, timeout:0, everyPage:true}});
+        }catch(e){console.warn(e)}
+      }else{
+        alert('Ad SDK not loaded');
+      }
+    }
+
+    // Placeholder reward function
+    function rewardUser(source){
+      // Replace with your app logic (increment coins, unlock level, etc.)
+      console.log('Rewarding user for', source);
+      // show a Telegram main button message if available
+      if (tg && tg.MainButton){
+        tg.MainButton.setText('Reward granted 🎉');
+        tg.MainButton.show();
+        setTimeout(()=>tg.MainButton.hide(), 1800);
+      } else {
+        // fallback UI
+        alert('You earned a reward!');
+      }
+    }
+
+    // Wire up UI
+    document.getElementById('btn-rewarded-popup').addEventListener('click', (e)=>{
+      e.preventDefault();
+      showRewardedPopup();
+    });
+
+    document.getElementById('btn-rewarded-interstitial').addEventListener('click', (e)=>{
+      e.preventDefault();
+      showRewardedInterstitial();
+    });
+
+    document.getElementById('btn-inapp').addEventListener('click', (e)=>{
+      e.preventDefault();
+      // attempt to trigger an in-app ad now
+      triggerInAppNow();
+    });
+
+    // init
+    window.addEventListener('load', ()=>{
+      initInApp();
+    });
+
+    // Optional: Clean up on unload
+    window.addEventListener('beforeunload', ()=>{
+      try{ if (tg) tg.close(); }catch(e){}
+    });
+  </script>
+
+  <!--
+    Deployment notes:
+    1. Host this file on HTTPS (Telegram requires secure origin).
+    2. Ensure your ad provider's SDK is loaded before calling show_9730228. If they supply a script URL, add it above and initialize per their docs.
+    3. In your Bot settings (BotFather) set the Web App URL to point to this hosted page.
+    4. Test inside Telegram: open the bot and use ReplyKeyboardButton with web_app or inline button with WebApp.
+  -->
 </body>
 </html>
