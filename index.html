@@ -8,8 +8,15 @@
   <!-- Telegram Web App -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- ✅ Monetag SDK (Correct Script) -->
-  <script src="https://js.monetag.com/show_3035767.js"></script>
+  <!-- Monetag SDK with both ads IDs -->
+  <script 
+    src="https://js.monetag.com/sdk.js" 
+    data-zone="3035767" 
+    data-sdk="show_3035767,show_9858364">
+  </script>
+
+  <!-- GigaPub Ads -->
+  <script src="https://ad.gigapub.tech/script?id=978"></script>
 
   <style>
     body { margin:0; font-family: Arial, sans-serif; background:#0a0a0a; overflow:hidden; color:white;}
@@ -82,7 +89,7 @@ const game = document.getElementById("game"),
       winGlow = document.getElementById("win-glow"),
       loseGlow = document.getElementById("lose-glow");
 
-let board = Array(9).fill(""), gameActive = true, xp = 0;
+let board = Array(9).fill(""), gameActive = true, xp = 0, notificationShown = false;
 
 const winningCombinations = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -119,9 +126,7 @@ function updateBoard() {
   pointsText.textContent = `XP: ${xp}`;
 }
 
-function getEmptyIndices() {
-  return board.map((v, i) => v === "" ? i : -1).filter(i => i !== -1);
-}
+function getEmptyIndices() { return board.map((v, i) => v === "" ? i : -1).filter(i => i !== -1); }
 
 function checkWin(player) {
   return winningCombinations.find(combo => combo.every(i => board[i] === player));
@@ -237,39 +242,44 @@ function resetGame() {
   updateBoard(); 
   restartBtn.style.display = "none"; 
   nextBtn.style.display = "none"; 
+  notification.textContent = ""; 
+  notificationShown = false; 
   loseGlow.style.opacity = 0;
 }
 
-// ✅ Reward Ad Button (Monetag)
+// Reward button → Monetag rewarded interstitial (id 3035767)
 rewardBtn.addEventListener("click", async () => {
-  if (typeof window.show_3035767 !== 'function') {
-    alert('Monetag SDK not loaded yet');
+  if (typeof show_3035767 !== "function") {
+    alert("Ad not loaded yet.");
     return;
   }
   try {
-    await window.show_3035767();
+    await show_3035767();
     xp = Math.min(xp + 1, 201); 
     resetGame(); 
   } catch (e) {
-    alert("Ad failed or skipped!");
+    alert("Ad failed!");
   }
 });
 
-// ✅ Next Button (Monetag 50% chance)
+// Next button → Randomly show GigaPub ad or increase level and XP
 nextBtn.addEventListener("click", async () => {
-  const showAd = Math.random() > 0.5;
-  if (showAd && typeof window.show_3035767 === 'function') {
+  const showAd = Math.random() > 0.5; // 50% chance to show ad
+
+  if (showAd) {
     try {
-      await window.show_3035767();
+      await window.showGiga();
+      xp = Math.min(xp + 1, 201); 
+      resetGame();
     } catch (e) {
       alert("Ad failed!");
     }
+  } else {
+    xp = Math.min(xp + 1, 201); 
+    resetGame();
   }
-  xp = Math.min(xp + 1, 201);
-  resetGame();
 });
 
-// Init
 createBoard();
 updateBoard();
 
@@ -304,6 +314,47 @@ function drawStars() {
   requestAnimationFrame(drawStars);
 }
 drawStars();
+
+// --- Monetag SDK readiness & In-App Interstitial init ---
+function monetagReady(callback) {
+  const tries = 20;
+  let attempt = 0;
+  const interval = setInterval(() => {
+    attempt++;
+    if (
+      typeof window.show_3035767 === 'function' &&
+      typeof window.show_9858364 === 'function'
+    ) {
+      clearInterval(interval);
+      console.log("✅ Monetag SDK is loaded");
+      callback();
+    } else {
+      console.log("⏳ Waiting for Monetag SDK... attempt", attempt);
+      if (attempt >= tries) {
+        clearInterval(interval);
+        console.error("❌ Monetag SDK did not load");
+      }
+    }
+  }, 500);
+}
+
+monetagReady(() => {
+  try {
+    show_9858364({
+      type: 'inApp',
+      inAppSettings: {
+        frequency: 2,
+        capping: 0.1,
+        interval: 30,
+        timeout: 5,
+        everyPage: false
+      }
+    });
+    console.log("✅ In-App Interstitial initialized");
+  } catch (e) {
+    console.error("❌ Error starting in-app interstitial", e);
+  }
+});
 </script>
 </body>
 </html>
