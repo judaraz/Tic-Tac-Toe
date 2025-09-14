@@ -6,11 +6,12 @@
   <title>Tasks — Telegram Mini App</title>
   <!-- Telegram Web App JS -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Monetag SDK -->
   <script src='//libtl.com/sdk.js' data-zone='9730228' data-sdk='show_9730228'></script>
   <style>
     :root{--accent:#ffb000;--bg:#0f0f10;--card:#131313;--muted:#9b9b9b;--white:#ffffff}
     html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
-    body{background:linear-gradient(0deg, #fff 0%, #fff 0%);display:flex;align-items:center;justify-content:center;padding:18px}
+    body{background:#fff;display:flex;align-items:center;justify-content:center;padding:18px}
     .frame{width:380px;border-radius:20px;padding:0;background:#ffb000;box-shadow:0 6px 0 rgba(0,0,0,0.06)}
     .device{background:var(--bg);border-radius:14px;padding:0 0 22px;overflow:hidden}
     header{height:86px;padding:18px 18px 12px;color:var(--white);display:flex;flex-direction:column}
@@ -20,7 +21,7 @@
     main{padding:18px}
     .section-title{color:var(--white);font-size:34px;margin:6px 0 8px}
     .section-sub{color:var(--muted);font-size:14px;margin-bottom:12px}
-    .card{background:linear-gradient(0deg,#ffb000 0%, #ffb000 0%);display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:8px;margin-bottom:14px}
+    .card{background:#ffb000;display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:8px;margin-bottom:14px}
     .card.dark{background:var(--card)}
     .left{display:flex;align-items:center;gap:14px}
     .emoji{font-size:42px}
@@ -32,7 +33,6 @@
     .small-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
     .clock-badge{width:40px;height:40px;border-radius:50%;background:linear-gradient(180deg,#2b2b2b,#181818);display:flex;align-items:center;justify-content:center;color:#fff}
     footer{height:8px}
-    /* responsive smaller */
     @media(max-width:420px){.frame{width:360px}}
   </style>
 </head>
@@ -80,6 +80,7 @@
           </div>
         </div>
 
+        <!-- In-App -->
         <div class="muted-card">
           <div style="font-size:22px;margin-bottom:6px">Daily</div>
           <div style="color:var(--muted);font-size:13px;margin-bottom:14px">After time actions</div>
@@ -106,81 +107,62 @@
   <script>
     // Telegram WebApp helper
     const tg = window.Telegram.WebApp || null;
-    if (tg){
-      tg.expand();
-    }
-
-    // --- Ad SDK integration ---
-    // In-app ad (only on button click)
-    function showInAppOnce(){
-      if (typeof show_9730228 === 'function'){
-        try{
-          show_9730228({ type: 'inApp' });
-        } catch(e){
-          console.warn('In-app ad error', e);
-        }
-      } else {
-        alert('Ad SDK not loaded');
-      }
-    }
-
-    // Rewarded Popup
-    async function showRewardedPopup(){
-      if (typeof show_9730228 !== 'function'){
-        alert('Ad SDK not loaded');
-        return;
-      }
-      try{
-        await show_9730228('pop');
-        rewardUser('popup');
-      } catch(e){
-        console.warn('Popup ad failed or was closed', e);
-      }
-    }
-
-    // Rewarded Interstitial
-    async function showRewardedInterstitial(){
-      if (typeof show_9730228 !== 'function'){
-        alert('Ad SDK not loaded');
-        return;
-      }
-      try{
-        await show_9730228();
-        rewardUser('interstitial');
-      } catch(e){
-        console.warn('Rewarded interstitial error', e);
-      }
-    }
+    if (tg){ tg.expand(); }
 
     // Reward function
     function rewardUser(source){
       console.log('Rewarding user for', source);
       if (tg && tg.MainButton){
-        tg.MainButton.setText('Reward granted 🎉');
+        tg.MainButton.setText(`Reward from ${source} 🎉`);
         tg.MainButton.show();
         setTimeout(()=>tg.MainButton.hide(), 1800);
       } else {
-        alert('You earned a reward!');
+        alert(`You earned a reward from ${source}!`);
       }
     }
 
+    // Popup
+    async function showRewardedPopup(){
+      if (typeof show_9730228 !== 'function'){ alert('Ad SDK not loaded'); return; }
+      try{
+        await show_9730228('pop');
+        rewardUser('popup');
+      } catch(e){ console.warn('Popup ad failed', e); }
+    }
+
+    // Interstitial
+    async function showRewardedInterstitial(){
+      if (typeof show_9730228 !== 'function'){ alert('Ad SDK not loaded'); return; }
+      try{
+        await show_9730228();
+        rewardUser('interstitial');
+      } catch(e){ console.warn('Interstitial ad failed', e); }
+    }
+
+    // In-App
+    async function showInAppOnce(){
+      if (typeof show_9730228 !== 'function'){ alert('Ad SDK not loaded'); return; }
+      try{
+        // Monetag in-app uses 'inApp'
+        await show_9730228('inApp');
+        rewardUser('inApp');
+      } catch(e){ console.warn('In-app ad failed', e); }
+    }
+
     // Wire up UI
-    document.getElementById('btn-rewarded-popup').addEventListener('click', (e)=>{
-      e.preventDefault();
-      showRewardedPopup();
+    document.getElementById('btn-rewarded-popup').addEventListener('click', e=>{
+      e.preventDefault(); showRewardedPopup();
     });
 
-    document.getElementById('btn-rewarded-interstitial').addEventListener('click', (e)=>{
-      e.preventDefault();
-      showRewardedInterstitial();
+    document.getElementById('btn-rewarded-interstitial').addEventListener('click', e=>{
+      e.preventDefault(); showRewardedInterstitial();
     });
 
-    document.getElementById('btn-inapp').addEventListener('click', (e)=>{
-      e.preventDefault();
-      showInAppOnce(); // 🔥 only on click
+    document.getElementById('btn-inapp').addEventListener('click', e=>{
+      e.preventDefault(); showInAppOnce();
     });
 
-    // Optional cleanup
+    // Cleanup
     window.addEventListener('beforeunload', ()=>{
       try{ if (tg) tg.close(); }catch(e){}
     });
