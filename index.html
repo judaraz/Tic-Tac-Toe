@@ -108,33 +108,20 @@
     const tg = window.Telegram.WebApp || null;
     if (tg){
       tg.expand();
-      // You can use tg.MainButton / tg.BackButton here if needed
     }
 
     // --- Ad SDK integration ---
-    // NOTE: This file assumes the ad SDK exposes a global function `show_9730228` (as in your snippet).
-    // If your ad provider requires an external script, load it first. Example:
-    // const s = document.createElement('script'); s.src = 'https://cdn.adprovider.example/sdk.js'; document.head.appendChild(s);
-
-    // Setup in-app interstitial automatic behavior on load
-    function initInApp() {
-      try{
-        // call your in-app scheduler with the settings provided
-        if (typeof show_9730228 === 'function'){
-          show_9730228({
-            type: 'inApp',
-            inAppSettings: {
-              frequency: 2,
-              capping: 0.1,
-              interval: 30,
-              timeout: 5,
-              everyPage: false
-            }
-          });
-        } else {
-          console.warn('show_9730228 is not defined. Make sure the ad SDK script is loaded.');
+    // In-app ad (only on button click)
+    function showInAppOnce(){
+      if (typeof show_9730228 === 'function'){
+        try{
+          show_9730228({ type: 'inApp' });
+        } catch(e){
+          console.warn('In-app ad error', e);
         }
-      } catch(e){console.error('inApp init error', e)}
+      } else {
+        alert('Ad SDK not loaded');
+      }
     }
 
     // Rewarded Popup
@@ -145,7 +132,6 @@
       }
       try{
         await show_9730228('pop');
-        // Reward the user here
         rewardUser('popup');
       } catch(e){
         console.warn('Popup ad failed or was closed', e);
@@ -160,37 +146,20 @@
       }
       try{
         await show_9730228();
-        // Reward the user here
         rewardUser('interstitial');
       } catch(e){
         console.warn('Rewarded interstitial error', e);
       }
     }
 
-    // Manual In-App ad trigger (if you want to force one)
-    function triggerInAppNow(){
-      if (typeof show_9730228 === 'function'){
-        // Some providers allow calling with {type:'inApp', immediate:true} or similar.
-        // Here we call the same function without params to show an interstitial if available.
-        try{
-          show_9730228({type:'inApp', inAppSettings:{frequency:1, capping:0.01, interval:0, timeout:0, everyPage:true}});
-        }catch(e){console.warn(e)}
-      }else{
-        alert('Ad SDK not loaded');
-      }
-    }
-
-    // Placeholder reward function
+    // Reward function
     function rewardUser(source){
-      // Replace with your app logic (increment coins, unlock level, etc.)
       console.log('Rewarding user for', source);
-      // show a Telegram main button message if available
       if (tg && tg.MainButton){
         tg.MainButton.setText('Reward granted 🎉');
         tg.MainButton.show();
         setTimeout(()=>tg.MainButton.hide(), 1800);
       } else {
-        // fallback UI
         alert('You earned a reward!');
       }
     }
@@ -208,27 +177,13 @@
 
     document.getElementById('btn-inapp').addEventListener('click', (e)=>{
       e.preventDefault();
-      // attempt to trigger an in-app ad now
-      triggerInAppNow();
+      showInAppOnce(); // 🔥 only on click
     });
 
-    // init
-    window.addEventListener('load', ()=>{
-      initInApp();
-    });
-
-    // Optional: Clean up on unload
+    // Optional cleanup
     window.addEventListener('beforeunload', ()=>{
       try{ if (tg) tg.close(); }catch(e){}
     });
   </script>
-
-  <!--
-    Deployment notes:
-    1. Host this file on HTTPS (Telegram requires secure origin).
-    2. Ensure your ad provider's SDK is loaded before calling show_9730228. If they supply a script URL, add it above and initialize per their docs.
-    3. In your Bot settings (BotFather) set the Web App URL to point to this hosted page.
-    4. Test inside Telegram: open the bot and use ReplyKeyboardButton with web_app or inline button with WebApp.
-  -->
 </body>
 </html>
