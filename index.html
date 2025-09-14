@@ -6,12 +6,12 @@
   <title>Tasks — Telegram Mini App</title>
   <!-- Telegram Web App JS -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Monetag SDK -->
+  <!-- ✅ Monetag SDK -->
   <script src='//libtl.com/sdk.js' data-zone='9730228' data-sdk='show_9730228'></script>
   <style>
     :root{--accent:#ffb000;--bg:#0f0f10;--card:#131313;--muted:#9b9b9b;--white:#ffffff}
     html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
-    body{background:#fff;display:flex;align-items:center;justify-content:center;padding:18px}
+    body{background:linear-gradient(0deg, #fff 0%, #fff 0%);display:flex;align-items:center;justify-content:center;padding:18px}
     .frame{width:380px;border-radius:20px;padding:0;background:#ffb000;box-shadow:0 6px 0 rgba(0,0,0,0.06)}
     .device{background:var(--bg);border-radius:14px;padding:0 0 22px;overflow:hidden}
     header{height:86px;padding:18px 18px 12px;color:var(--white);display:flex;flex-direction:column}
@@ -21,7 +21,7 @@
     main{padding:18px}
     .section-title{color:var(--white);font-size:34px;margin:6px 0 8px}
     .section-sub{color:var(--muted);font-size:14px;margin-bottom:12px}
-    .card{background:#ffb000;display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:8px;margin-bottom:14px}
+    .card{background:linear-gradient(0deg,#ffb000 0%, #ffb000 0%);display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:8px;margin-bottom:14px}
     .card.dark{background:var(--card)}
     .left{display:flex;align-items:center;gap:14px}
     .emoji{font-size:42px}
@@ -52,7 +52,7 @@
       </header>
 
       <main>
-        <!-- Rewarded Interstitial (orange) -->
+        <!-- Rewarded Interstitial -->
         <div class="card" id="rewarded-interstitial">
           <div class="left">
             <div class="emoji">🤩</div>
@@ -66,7 +66,7 @@
           </div>
         </div>
 
-        <!-- Rewarded Popup (dark) -->
+        <!-- Rewarded Popup -->
         <div class="card dark" id="rewarded-popup" style="margin-bottom:18px">
           <div class="left">
             <div class="emoji">😎</div>
@@ -105,14 +105,12 @@
   </div>
 
   <script>
-    // Telegram WebApp helper
-    const tg = window.Telegram.WebApp || null;
-    if (tg){ tg.expand(); }
+    const tg = window.Telegram?.WebApp || null;
+    if (tg) tg.expand();
 
-    // Reward function
     function rewardUser(source){
       console.log('Rewarding user for', source);
-      if (tg && tg.MainButton){
+      if (tg?.MainButton){
         tg.MainButton.setText(`Reward from ${source} 🎉`);
         tg.MainButton.show();
         setTimeout(()=>tg.MainButton.hide(), 1800);
@@ -121,51 +119,61 @@
       }
     }
 
-    // Popup
+    // --- Ad Handlers ---
+
+    // In-App (safe fallback)
+    async function showInAppOnce(){
+      if (typeof show_9730228 !== 'function'){
+        alert('Ad SDK not loaded');
+        return;
+      }
+      try {
+        await show_9730228({ type: 'inApp' });
+        rewardUser('inApp');
+      } catch (e1) {
+        console.warn("In-app (object) failed", e1);
+        try {
+          await show_9730228('inApp');
+          rewardUser('inApp');
+        } catch (e2) {
+          console.warn("In-app (string) failed", e2);
+          try {
+            await show_9730228();
+            rewardUser('interstitial');
+          } catch (e3) {
+            console.error("In-app not available", e3);
+            alert("In-App ads not available for this placement.");
+          }
+        }
+      }
+    }
+
     async function showRewardedPopup(){
-      if (typeof show_9730228 !== 'function'){ alert('Ad SDK not loaded'); return; }
-      try{
+      if (typeof show_9730228 !== 'function'){
+        alert('Ad SDK not loaded');
+        return;
+      }
+      try {
         await show_9730228('pop');
         rewardUser('popup');
-      } catch(e){ console.warn('Popup ad failed', e); }
+      } catch(e){ console.warn('Popup failed', e); }
     }
 
-    // Interstitial
     async function showRewardedInterstitial(){
-      if (typeof show_9730228 !== 'function'){ alert('Ad SDK not loaded'); return; }
-      try{
+      if (typeof show_9730228 !== 'function'){
+        alert('Ad SDK not loaded');
+        return;
+      }
+      try {
         await show_9730228();
         rewardUser('interstitial');
-      } catch(e){ console.warn('Interstitial ad failed', e); }
+      } catch(e){ console.warn('Interstitial failed', e); }
     }
 
-    // In-App
-    async function showInAppOnce(){
-      if (typeof show_9730228 !== 'function'){ alert('Ad SDK not loaded'); return; }
-      try{
-        // Monetag in-app uses 'inApp'
-        await show_9730228('inApp');
-        rewardUser('inApp');
-      } catch(e){ console.warn('In-app ad failed', e); }
-    }
-
-    // Wire up UI
-    document.getElementById('btn-rewarded-popup').addEventListener('click', e=>{
-      e.preventDefault(); showRewardedPopup();
-    });
-
-    document.getElementById('btn-rewarded-interstitial').addEventListener('click', e=>{
-      e.preventDefault(); showRewardedInterstitial();
-    });
-
-    document.getElementById('btn-inapp').addEventListener('click', e=>{
-      e.preventDefault(); showInAppOnce();
-    });
-
-    // Cleanup
-    window.addEventListener('beforeunload', ()=>{
-      try{ if (tg) tg.close(); }catch(e){}
-    });
+    // --- Wire Buttons ---
+    document.getElementById('btn-inapp').addEventListener('click', showInAppOnce);
+    document.getElementById('btn-rewarded-popup').addEventListener('click', showRewardedPopup);
+    document.getElementById('btn-rewarded-interstitial').addEventListener('click', showRewardedInterstitial);
   </script>
 </body>
 </html>
