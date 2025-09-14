@@ -8,8 +8,8 @@
   <!-- Telegram Web App JS -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Monetag SDK for placement 9730228 -->
-  <script src='//libtl.com/sdk.js' data-zone='9730228' data-sdk='show_9730228'></script>
+  <!-- Monetag SDK for placement 9873868 -->
+  <script src='//libtl.com/sdk.js' data-zone='9873868' data-sdk='show_9873868'></script>
 
   <style>
     :root{--accent:#ffb000;--bg:#0f0f10;--card:#131313;--muted:#9b9b9b;--white:#ffffff}
@@ -153,14 +153,14 @@
 
     // In-App with inAppSettings
     async function showInApp(){
-      if (typeof show_9730228 !== 'function'){
+      if (typeof show_9873868 !== 'function'){
         logDebug('In-App SDK not loaded.');
         alert('Ad SDK not loaded');
         return;
       }
       try {
         logDebug('Attempting to show In-App ad...');
-        await show_9730228({
+        await show_9873868({
           type: 'inApp',
           inAppSettings: {
             frequency: 0,   // 0 = manual only, no automatic frequency
@@ -180,14 +180,14 @@
 
     // Popup
     async function showRewardedPopup(){
-      if (typeof show_9730228 !== 'function'){
+      if (typeof show_9873868 !== 'function'){
         logDebug('Popup SDK not loaded.');
         alert('Ad SDK not loaded');
         return;
       }
       try {
         logDebug('Attempting to show Popup ad...');
-        await show_9730228('pop');
+        await show_9873868('pop');
         logDebug('Popup ad shown successfully.');
         rewardUser('popup');
       } catch(e){ logDebug('Popup failed: ' + e); }
@@ -195,14 +195,14 @@
 
     // Interstitial
     async function showRewardedInterstitial(){
-      if (typeof show_9730228 !== 'function'){
+      if (typeof show_9873868 !== 'function'){
         logDebug('Interstitial SDK not loaded.');
         alert('Ad SDK not loaded');
         return;
       }
       try {
         logDebug('Attempting to show Interstitial ad...');
-        await show_9730228();
+        await show_9873868();
         logDebug('Interstitial ad shown successfully.');
         rewardUser('interstitial');
       } catch(e){ logDebug('Interstitial failed: ' + e); }
