@@ -130,12 +130,12 @@
     const tg = window.Telegram?.WebApp || null;
     if (tg) tg.expand();
 
-    function logDebug(message){
+    function logDebug(msg){
       const div = document.getElementById('ad-debug');
       const time = new Date().toLocaleTimeString();
-      div.innerHTML += `[${time}] ${message}<br>`;
+      div.innerHTML += `[${time}] ${msg}<br>`;
       div.scrollTop = div.scrollHeight;
-      console.log(message);
+      console.log(msg);
     }
 
     function rewardUser(source){
@@ -150,15 +150,26 @@
     }
 
     // --- Ad Handlers ---
+
+    // In-App with inAppSettings
     async function showInApp(){
       if (typeof show_9730228 !== 'function'){
-        logDebug('In-App SDK not loaded yet.');
+        logDebug('In-App SDK not loaded.');
         alert('Ad SDK not loaded');
         return;
       }
       try {
         logDebug('Attempting to show In-App ad...');
-        await show_9730228({ type: 'inApp' });
+        await show_9730228({
+          type: 'inApp',
+          inAppSettings: {
+            frequency: 0,   // 0 = manual only, no automatic frequency
+            capping: 0,
+            interval: 0,
+            timeout: 0,
+            everyPage: false
+          }
+        });
         logDebug('In-App ad shown successfully.');
         rewardUser('inApp');
       } catch(e){
@@ -167,6 +178,7 @@
       }
     }
 
+    // Popup
     async function showRewardedPopup(){
       if (typeof show_9730228 !== 'function'){
         logDebug('Popup SDK not loaded.');
@@ -181,6 +193,7 @@
       } catch(e){ logDebug('Popup failed: ' + e); }
     }
 
+    // Interstitial
     async function showRewardedInterstitial(){
       if (typeof show_9730228 !== 'function'){
         logDebug('Interstitial SDK not loaded.');
@@ -195,7 +208,7 @@
       } catch(e){ logDebug('Interstitial failed: ' + e); }
     }
 
-    // --- Wire Buttons ---
+    // Wire Buttons
     document.getElementById('btn-inapp').addEventListener('click', showInApp);
     document.getElementById('btn-rewarded-popup').addEventListener('click', showRewardedPopup);
     document.getElementById('btn-rewarded-interstitial').addEventListener('click', showRewardedInterstitial);
