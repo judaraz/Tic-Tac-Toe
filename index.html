@@ -65,6 +65,8 @@
     if (tg) tg.expand();
 
     let adInterval = null;
+    let adsShown = 0; // Counter for ads shown
+    let adsClicked = 0; // Counter for ads clicked
 
     function logDebug(msg){
       const div = document.getElementById('ad-debug');
@@ -93,7 +95,8 @@
           type: 'inApp',
           inAppSettings: { frequency:0, capping:0, interval:0, timeout:0, everyPage:false }
         });
-        logDebug('Ad shown.');
+        adsShown++; // Increment ads shown counter
+        logDebug(`Ad shown. Total ads shown: ${adsShown}`);
         rewardUser('inApp');
       } catch(e){
         logDebug('Ad failed: ' + e);
@@ -118,7 +121,12 @@
       }
     }
 
-    document.getElementById('btn-inapp').addEventListener('click', startAdLoop);
+    document.getElementById('btn-inapp').addEventListener('click', () => {
+      adsClicked++; // Increment ads clicked counter
+      logDebug(`Ad clicked. Total ads clicked: ${adsClicked}`);
+      startAdLoop();
+    });
+
     document.getElementById('btn-stop').addEventListener('click', stopAdLoop);
   </script>
 </body>
