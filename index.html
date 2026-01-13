@@ -5,16 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CashReward App</title>
     
-    <!-- RichPartners SDK (Primary) -->
-    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
-    
-    <!-- Taddy.pro SDK (Fallback) -->
-    <script src="https://sdk.taddy.pro/web/taddy.min.js" data-pub-id="6ca0ab17ec8eee8a7ba810ef4f686359"></script>
+    <!-- Taddy.pro SDK (Follows official documentation) -->
+    <script src="https://sdk.taddy.pro/web/taddy.min.js?1317" data-pub-id="6ca0ab17ec8eee8a7ba810ef4f686359"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        /* Your existing CSS styles remain unchanged */
         body { font-family: 'Poppins', sans-serif; background-color: #1a1a1a; color: #ffffff; }
         .main-bg { background-color: #1a1a1a; }
         .card-bg { background-color: #2c2c2c; }
@@ -62,7 +60,6 @@
             gap: 4px;
             z-index: 99;
         }
-        .ad-status.richads { background: rgba(52, 152, 219, 0.8); }
         .ad-status.taddy { background: rgba(155, 89, 182, 0.8); }
         .ad-status.mock { background: rgba(149, 165, 166, 0.8); }
     </style>
@@ -96,8 +93,8 @@
     <!-- Main App -->
     <div id="app-container" class="min-h-screen flex-col main-page main-bg">
         <!-- Ad Status Indicator -->
-        <div id="adStatusDisplay" class="ad-status richads">
-            <i data-lucide="ad" class="w-3 h-3"></i> <span id="adStatusText">RichAds</span>
+        <div id="adStatusDisplay" class="ad-status taddy">
+            <i data-lucide="ad" class="w-3 h-3"></i> <span id="adStatusText">Taddy Ads</span>
         </div>
         
         <header class="p-4 flex items-center justify-between"><div class="flex items-center space-x-3"><img src="https://placehold.co/50x50/facc15/1a1a1a?text=A" id="profile-picture" class="rounded-full border-2 border-yellow-400"><div><h2 class="font-semibold text-lg leading-tight" id="header-profile-name">Hi, Anonymously</h2><p class="text-gray-400 text-sm leading-tight">Welcome</p></div></div><div class="accent-yellow-bg text-black px-4 py-2 rounded-full font-bold flex items-center space-x-2"><span id="header-coin-balance">0</span><i data-lucide="coins" class="w-5 h-5"></i></div></header>
@@ -162,11 +159,11 @@
         let appConfig = {};
         let sliderInterval;
         
-        // ===== ADS SDK INITIALIZATION =====
-        let richAdsLoaded = false;
-        let taddyLoaded = false;
-        let taddyAds = null;
-        let telegramAdsController = null;
+        // ===== TADDY ADS INTEGRATION (CORRECTED) =====
+        let taddyInitialized = false;
+        let taddyAdsService = null;
+        let adRetryCount = 0;
+        const MAX_AD_RETRIES = 2;
 
         const loader = document.getElementById('loader');
         const backButtonContainer = document.getElementById('back-button-container');
@@ -174,63 +171,45 @@
         window.onload = () => {
             lucide.createIcons();
             setupEventListeners();
-            showMainPage('auth-section'); // Start with auth page
-            initializeAdSDKs(); // Initialize ads
+            showMainPage('auth-section');
+            initializeTaddyAds(); // Initialize Taddy properly
             onAuthStateChanged(auth, handleAuthStateChange);
         };
         
-        // ===== AD SDK INITIALIZATION =====
-        function initializeAdSDKs() {
-            console.log("🎯 Initializing Advertising SDKs...");
+        // ===== TADDY INITIALIZATION (FIXED) =====
+        function initializeTaddyAds() {
+            console.log("🎯 Initializing Taddy Ads...");
             
-            // Initialize RichAds (Primary)
+            // Check if Taddy script loaded properly
+            if (typeof window.Taddy === 'undefined') {
+                console.log("❌ Taddy SDK not loaded - script might have failed");
+                updateAdStatus('mock');
+                return;
+            }
+            
             try {
-                if (typeof TelegramAdsController !== 'undefined') {
-                    telegramAdsController = new TelegramAdsController();
-                    telegramAdsController.initialize({
-                        pubId: "956231",
-                        appId: "5596", // Your Richads App ID
-                    });
-                    richAdsLoaded = true;
-                    console.log("✅ RichAds initialized successfully");
-                    updateAdStatus('richads');
+                // METHOD 1: Auto-initialization (already done with data-pub-id)
+                // The script with data-pub-id should auto-initialize[citation:1]
+                console.log("✅ Taddy script loaded with auto-init via data-pub-id");
+                
+                // Send ready event when app is loaded[citation:1]
+                if (typeof window.Taddy.ready === 'function') {
+                    window.Taddy.ready();
+                    console.log("✅ Taddy.ready() called");
+                }
+                
+                // Get ads service[citation:1]
+                if (typeof window.Taddy.ads === 'function') {
+                    taddyAdsService = window.Taddy.ads();
+                    taddyInitialized = true;
+                    console.log("✅ Taddy ads service obtained");
+                    updateAdStatus('taddy');
                 } else {
-                    console.log("❌ TelegramAdsController not defined");
+                    console.log("❌ Taddy.ads() function not available");
                 }
+                
             } catch (error) {
-                console.log("❌ RichAds initialization error:", error);
-            }
-            
-            // Initialize Taddy.pro (Fallback)
-            if (typeof window.Taddy !== 'undefined' && window.Taddy) {
-                try {
-                    console.log("🔄 Initializing Taddy.pro...");
-                    
-                    // Taddy auto-initializes with data-pub-id, but we can call ready()
-                    if (typeof window.Taddy.ready === 'function') {
-                        window.Taddy.ready();
-                        console.log("✅ Taddy.ready() called");
-                    }
-                    
-                    // Get ads service
-                    if (typeof window.Taddy.ads === 'function') {
-                        taddyAds = window.Taddy.ads();
-                        taddyLoaded = true;
-                        console.log("✅ Taddy.pro ads service loaded");
-                        if (!richAdsLoaded) {
-                            updateAdStatus('taddy');
-                        }
-                    } else {
-                        console.log("❌ Taddy.ads() not available");
-                    }
-                    
-                } catch (error) {
-                    console.log("❌ Taddy.pro initialization error:", error);
-                }
-            }
-            
-            if (!richAdsLoaded && !taddyLoaded) {
-                console.log("⚠️ No ad SDKs loaded. Will use mock ads.");
+                console.log("❌ Taddy initialization error:", error);
                 updateAdStatus('mock');
             }
         }
@@ -241,12 +220,9 @@
             
             if (!adStatusElement) return;
             
-            if (type === 'richads') {
-                adStatusElement.className = 'ad-status richads';
-                adStatusText.textContent = 'RichAds';
-            } else if (type === 'taddy') {
+            if (type === 'taddy') {
                 adStatusElement.className = 'ad-status taddy';
-                adStatusText.textContent = 'Taddy.pro';
+                adStatusText.textContent = 'Taddy Ads';
             } else {
                 adStatusElement.className = 'ad-status mock';
                 adStatusText.textContent = 'Mock Ads';
@@ -310,7 +286,7 @@
                 referralRules: ["Your friend must sign up.", "Bonus is credited after they apply the code."],
                 referralShareText: "Join CashReward and earn money! Use my code {CODE} to get a bonus. App link: {APP_LINK}",
                 watchAdSpecialTaskCount: 10, watchAdSpecialTaskReward: 100, watchAdSpecialTaskTimer: 60, 
-                paymentMethods: ["UPI", "Paytm", "PayPal"] // Simplified to one list
+                paymentMethods: ["UPI", "Paytm", "PayPal"]
             };
         }
         
@@ -429,55 +405,55 @@
             updateAllUI();
         }
 
-        // ===== AD SYSTEM (REPLACED MONETAG WITH RICHADS + TADDY) =====
+        // ===== TADDY ADS FUNCTION (CORRECTED) =====
         async function showAds() {
-            console.log("🎯 Attempting to show ads...");
-            console.log("RichAds loaded:", richAdsLoaded);
-            console.log("Taddy loaded:", taddyLoaded);
+            console.log("🎯 Attempting to show Taddy interstitial ad...");
+            console.log("Taddy initialized:", taddyInitialized);
+            console.log("Ads service available:", taddyAdsService);
             
-            // Try RichAds first (Primary)
-            if (richAdsLoaded && telegramAdsController) {
-                console.log("🎯 Showing RichAds (Primary)...");
+            // Try Taddy interstitial ads first (as per documentation)[citation:1]
+            if (taddyInitialized && taddyAdsService && typeof taddyAdsService.interstitial === 'function') {
+                console.log("🎯 Calling Taddy interstitial()...");
+                adRetryCount = 0;
+                
                 return new Promise((resolve, reject) => {
-                    try {
-                        telegramAdsController.showAd();
-                        setTimeout(() => {
-                            console.log("✅ RichAds completed");
-                            resolve(true);
-                        }, 5000);
-                    } catch (error) {
-                        console.log("❌ RichAds error:", error);
-                        reject(error);
-                    }
-                });
-            } 
-            // Try Taddy.pro second (Fallback)
-            else if (taddyLoaded && taddyAds && typeof taddyAds.interstitial === 'function') {
-                console.log("🎯 Showing Taddy.pro (Fallback)...");
-                return new Promise((resolve, reject) => {
-                    taddyAds.interstitial({
+                    // Call interstitial with proper callbacks as per Taddy docs[citation:1]
+                    taddyAdsService.interstitial({
                         onClosed: function() {
-                            console.log("✅ Taddy.pro ad closed");
+                            console.log("✅ Taddy ad closed");
                             resolve(true);
+                        },
+                        onViewThrough: function(id) {
+                            console.log("✅ Taddy ad viewed through, ID:", id);
                         }
                     })
                     .then((success) => {
                         if (success) {
-                            console.log("✅ Taddy.pro interstitial ad shown successfully");
+                            console.log("✅ Taddy interstitial ad shown successfully");
+                            // Don't resolve here - wait for onClosed callback
                         } else {
-                            console.log("❌ Taddy.pro interstitial ad failed to show");
-                            reject("Taddy.pro ad failed");
+                            console.log("❌ Taddy interstitial ad failed to show (success=false)");
+                            reject("Taddy ad failed to load");
                         }
                     })
                     .catch((error) => {
-                        console.log("❌ Taddy.pro interstitial ad error:", error);
-                        reject(error);
+                        console.log("❌ Taddy interstitial ad error:", error);
+                        // If we have retries left, try again
+                        if (adRetryCount < MAX_AD_RETRIES) {
+                            adRetryCount++;
+                            console.log(`🔄 Retrying Taddy ad (attempt ${adRetryCount}/${MAX_AD_RETRIES})...`);
+                            setTimeout(() => {
+                                showAds().then(resolve).catch(reject);
+                            }, 1000);
+                        } else {
+                            reject("Taddy ad service unavailable after retries");
+                        }
                     });
                 });
-            }
+            } 
             // Fallback to mock ads
             else {
-                console.log("🎯 Showing mock ad...");
+                console.log("🎯 Taddy not available, showing mock ad...");
                 return new Promise((resolve) => {
                     setTimeout(() => {
                         console.log("✅ Mock ad completed");
