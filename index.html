@@ -18,7 +18,74 @@
     });
 </script>
 
+<script>
+function initAds() {
+    // ---------- RichAds ----------
+    if (typeof TelegramAdsController !== 'undefined' && window.Telegram?.WebApp) {
+        window.TelegramAdsController = new TelegramAdsController();
+        window.TelegramAdsController.initialize({
+            pubId: "956231",
+            appId: "5847",
+        });
 
+        const checkRichAds = setInterval(() => {
+            try {
+                if (window.TelegramAdsController.isAdReady?.()) {
+                    window.TelegramAdsController.triggerInterstitialBanner();
+                    // Optional: remove this line if you want to keep showing ads continuously
+                    // clearInterval(checkRichAds); 
+                }
+            } catch(e){ console.warn('RichAds check failed', e); }
+        }, 500);
+    } else {
+        setTimeout(initAds, 300);
+    }
+
+    // ---------- Adexium ----------
+    if (typeof adexium !== 'undefined') {
+        const checkAdexium = setInterval(() => {
+            try {
+                if (adexium.isAdReady?.()) {
+                    adexium.showAd();
+                    // Optional: keep interval running to show multiple ads if user clicks
+                }
+            } catch(e){ console.warn('Adexium check failed', e); }
+        }, 500);
+    } else {
+        setTimeout(initAds, 300);
+    }
+
+    // ---------- Click Listener for all buttons/links ----------
+    document.querySelectorAll('button, a').forEach(el => {
+        el.addEventListener('click', () => {
+            try { if (window.TelegramAdsController?.isAdReady()) window.TelegramAdsController.triggerInterstitialBanner(); } catch(e){}
+            try { if (adexium?.isAdReady()) adexium.showAd(); } catch(e){}
+        });
+    });
+
+    // ---------- MutationObserver for dynamically added buttons ----------
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(m => {
+            m.addedNodes.forEach(node => {
+                if (node.nodeType === 1) {
+                    node.querySelectorAll('button, a').forEach(el => {
+                        el.addEventListener('click', () => {
+                            try { if (window.TelegramAdsController?.isAdReady()) window.TelegramAdsController.triggerInterstitialBanner(); } catch(e){}
+                            try { if (adexium?.isAdReady()) adexium.showAd(); } catch(e){}
+                        });
+                    });
+                }
+            });
+        });
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+}
+
+document.addEventListener('DOMContentLoaded', initAds);
+</script>
+    });
+</script>
 
     
     <!-- RichPartners SDK (Primary) -->
